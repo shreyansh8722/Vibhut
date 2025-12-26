@@ -1,22 +1,42 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import LoadingSpinner from './LoadingSpinner';
 
-// This component wraps our protected pages
-export default function ProtectedRoute({ children }) {
+/**
+ * Standard User Protection
+ */
+export const ProtectedRoute = () => {
   const { user, loading } = useAuth();
 
   if (loading) {
-    // Show a spinner while auth state is being checked
-    return <LoadingSpinner />;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-heritage-paper">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-heritage-rudraksha"></div>
+      </div>
+    );
   }
 
-  if (!user) {
-    // If not logged in, redirect to the login page
-    return <Navigate to="/login" replace />;
+  return user ? <Outlet /> : <Navigate to="/login" replace />;
+};
+
+/**
+ * Database-Driven Admin Protection
+ */
+export const AdminRoute = () => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-heritage-paper">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-heritage-rudraksha"></div>
+      </div>
+    );
   }
 
-  // If logged in, show the page
-  return children;
-}
+  // Logic: Only allow access if 'role' in database is exactly 'admin'
+  const isAdmin = user && user.role === 'admin';
+
+  return isAdmin ? <Outlet /> : <Navigate to="/" replace />;
+};
+
+export default ProtectedRoute;

@@ -1,122 +1,150 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { Package, MapPin, LogOut, User, LayoutDashboard, ChevronRight } from 'lucide-react'; // Added LayoutDashboard icon
 import { useNavigate } from 'react-router-dom';
-import { signOut } from 'firebase/auth';
-import { auth } from '../lib/firebase';
-import { useAuth } from '../hooks/useAuth';
-import {
-  LogOut,
-  ChevronRight,
-  Heart,
-  Settings,
-  ArrowLeft,
-  User as UserIcon, // Renamed to avoid conflict
-} from 'lucide-react';
-import { motion } from 'framer-motion';
+import { useAuth } from '../hooks/useAuth'; 
 
-// A reusable component for profile navigation links
-const ProfileLink = ({ icon, label, onClick }) => (
-  <motion.button
-    whileTap={{ scale: 0.99, backgroundColor: "#f9f9f9" }}
-    onClick={onClick}
-    className="w-full flex items-center justify-between px-4 py-5 bg-white border-b border-gray-100 text-left"
-  >
-    <div className="flex items-center gap-4">
-      <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-        {icon}
-      </div>
-      <span className="text-base font-medium text-gray-900">{label}</span>
-    </div>
-    <ChevronRight className="w-5 h-5 text-gray-400" />
-  </motion.button>
-);
-
-export default function ProfilePage() {
-  const { user } = useAuth(); // Get the currently logged-in user
+const ProfilePage = () => {
   const navigate = useNavigate();
+  const { user, logout } = useAuth(); 
+  const [activeTab, setActiveTab] = useState('orders');
+
+  // Protect Route
+  useEffect(() => {
+    if (!user) {
+      navigate('/login');
+    }
+  }, [user, navigate]);
 
   const handleLogout = async () => {
     try {
-      await signOut(auth);
-      navigate('/'); // Redirect to home page after logout
-    } catch (err) {
-      console.error("Error logging out:", err);
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error("Logout failed", error);
     }
   };
 
-  // This should be handled by ProtectedRoute, but it's a good safeguard
-  if (!user) {
-    return null; 
-  }
+  if (!user) return null;
 
-  const firstName = (user.displayName?.split(" ")[0] || "User").replace(/[^A-Za-z]/g, "");
+  const getInitials = (name) => name ? name.charAt(0).toUpperCase() : 'U';
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-28"> {/* Added padding for bottom nav */}
-      
-      {/* Header */}
-      <div className="bg-white p-4 flex items-center gap-4 border-b border-gray-100">
-        <button
-          onClick={() => navigate(-1)}
-          className="p-2 rounded-full hover:bg-gray-100"
-          aria-label="Go back"
-        >
-          <ArrowLeft size={20} className="text-gray-700" />
-        </button>
-        <h1 className="text-xl font-semibold">Profile</h1>
-      </div>
-
-      {/* User Info Section */}
-      <div className="p-6 bg-white">
-        <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-gray-100">
-            {user.photoURL ? (
-              <img
-                src={user.photoURL}
-                alt="Profile"
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                {/* Fallback icon if no photoURL */}
-                <UserIcon size={32} className="text-gray-500" />
-              </div>
-            )}
-          </div>
-          <div>
-            <h2 className="text-2xl font-semibold">{user.displayName || firstName}</h2>
-            <p className="text-gray-500">{user.email}</p>
-          </div>
+    <div className="min-h-screen bg-gray-50 py-12 px-4 font-body">
+      <div className="container mx-auto max-w-6xl">
+        
+        {/* Header */}
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-10 gap-4">
+           <div>
+             <h1 className="font-heading text-3xl md:text-4xl font-bold text-black">My Account</h1>
+             <p className="text-gray-500 mt-2 text-sm">
+               Welcome back, <span className="text-black font-bold">{user.displayName || 'Devotee'}</span>
+             </p>
+           </div>
+           
+           <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full border border-gray-200 shadow-sm">
+              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+              <span className="text-xs font-bold text-gray-600 uppercase tracking-wider">
+                Member Since {new Date(user.metadata.creationTime).getFullYear()}
+              </span>
+           </div>
         </div>
-      </div>
 
-      {/* Navigation Links */}
-      <div className="mt-6">
-        <ProfileLink
-          icon={<Heart size={20} className="text-gray-600" />}
-          label="My Favorites"
-          onClick={() => navigate('/favorites')}
-        />
-        <ProfileLink
-          icon={<Settings size={20} className="text-gray-600" />}
-          label="Account Settings"
-          onClick={() => {
-            // You can build this page later
-            console.log("Navigate to settings");
-          }}
-        />
-      </div>
+        <div className="flex flex-col lg:flex-row gap-8">
+           
+           {/* SIDEBAR NAVIGATION */}
+           <div className="w-full lg:w-1/4">
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden sticky top-24">
+                 
+                 {/* User Info */}
+                 <div className="p-6 border-b border-gray-100 bg-gray-50/50">
+                    <div className="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center font-heading font-bold text-xl mb-3">
+                       {getInitials(user.displayName)}
+                    </div>
+                    <div className="text-sm font-bold text-black">{user.displayName || 'User'}</div>
+                    <div className="text-xs text-gray-500 truncate" title={user.email}>{user.email}</div>
+                 </div>
 
-      {/* Logout Button */}
-      <div className="mt-8 px-6">
-        <motion.button
-          whileTap={{ scale: 0.99, backgroundColor: "#f8f8f8" }}
-          onClick={handleLogout}
-          className="w-full flex items-center justify-center gap-3 py-4 px-4 bg-white rounded-xl shadow-sm border border-gray-100"
-        >
-          <LogOut size={18} className="text-red-500" />
-          <span className="text-base font-medium text-red-500">Logout</span>
-        </motion.button>
+                 {/* Menu Items */}
+                 <nav className="p-2 space-y-1">
+                   <button 
+                     onClick={() => setActiveTab('orders')}
+                     className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-sm font-bold uppercase tracking-wide transition-all ${
+                       activeTab === 'orders' ? 'bg-black text-white shadow-md' : 'text-gray-500 hover:bg-gray-50 hover:text-black'
+                     }`}
+                   >
+                      <Package size={18} /> Order History
+                   </button>
+                   
+                   <button 
+                     onClick={() => setActiveTab('addresses')}
+                     className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-sm font-bold uppercase tracking-wide transition-all ${
+                       activeTab === 'addresses' ? 'bg-black text-white shadow-md' : 'text-gray-500 hover:bg-gray-50 hover:text-black'
+                     }`}
+                   >
+                      <MapPin size={18} /> Addresses
+                   </button>
+
+                   <div className="my-2 border-t border-gray-100"></div>
+
+                   {/* --- ADMIN BUTTON (Only if role is admin) --- */}
+                   {user.role === 'admin' && (
+                     <button 
+                       onClick={() => navigate('/admin')}
+                       className="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-sm font-bold uppercase tracking-wide text-black hover:bg-gray-100 transition-colors mb-1"
+                     >
+                        <LayoutDashboard size={18} /> Admin Dashboard
+                     </button>
+                   )}
+
+                   <button 
+                     onClick={handleLogout}
+                     className="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-sm font-bold uppercase tracking-wide text-red-500 hover:bg-red-50 transition-colors"
+                   >
+                      <LogOut size={18} /> Logout
+                   </button>
+                 </nav>
+              </div>
+           </div>
+
+           {/* RIGHT CONTENT AREA */}
+           <div className="w-full lg:w-3/4">
+              
+              {/* Orders Tab */}
+              {activeTab === 'orders' && (
+                 <div className="space-y-6 animate-fade-in">
+                    <h2 className="font-heading text-2xl font-bold mb-6">Recent Orders</h2>
+                    <div className="text-center py-20 bg-white rounded-xl border border-dashed border-gray-300">
+                        <Package size={48} className="mx-auto text-gray-300 mb-4" />
+                        <h3 className="text-lg font-bold text-gray-900">No orders yet</h3>
+                        <p className="text-gray-500 text-sm mb-6">Your spiritual journey begins with your first step.</p>
+                        <button onClick={() => navigate('/shop')} className="px-6 py-2 bg-black text-white text-xs font-bold uppercase rounded hover:bg-[var(--color-primary)] transition-colors">
+                           Start Shopping
+                        </button>
+                    </div>
+                 </div>
+              )}
+
+              {/* Addresses Tab */}
+              {activeTab === 'addresses' && (
+                 <div className="space-y-6 animate-fade-in">
+                    <div className="flex justify-between items-end mb-6">
+                       <h2 className="font-heading text-2xl font-bold">Saved Addresses</h2>
+                       <button className="text-xs font-bold text-[var(--color-primary)] uppercase hover:underline">
+                         + Add New
+                       </button>
+                    </div>
+                    <div className="bg-white p-8 rounded-xl border border-dashed border-gray-300 text-center">
+                        <p className="text-gray-500 text-sm">You haven't saved any addresses yet.</p>
+                    </div>
+                 </div>
+              )}
+
+           </div>
+
+        </div>
       </div>
     </div>
   );
-}
+};
+
+export default ProfilePage;

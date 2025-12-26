@@ -1,60 +1,96 @@
-import React from "react";
-import { X } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import React from 'react';
+import { createPortal } from 'react-dom'; // IMPORT PORTAL
+import { X, Check } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
-// Hardcoded filter options as seen in original code
-// (You can move this back to ../utils/filters if you prefer)
-const FILTER_OPTIONS = [
-    { id: "All", label: "All" },
-    { id: "free", label: "Free" },
-    { id: "new", label: "New" },
-    { id: "top", label: "Top Rated" },
-];
+export const FilterModal = ({
+  open,
+  onClose,
+  currentFilter,
+  onFilterSelect,
+  filterOptions = [],
+}) => {
+  if (!open) return null;
 
-export const FilterModal = ({ open, onClose, currentFilter, onFilterSelect }) => {
-  return (
+  // USE PORTAL TO RENDER AT ROOT LEVEL
+  return createPortal(
     <AnimatePresence>
       {open && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.15 }}
-          className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-end"
-          onClick={onClose} // Close when clicking backdrop
-        >
+        <div className="fixed inset-0 z-[9999] flex items-end md:items-center justify-center pointer-events-none">
+          
+          {/* 1. Backdrop */}
           <motion.div
-            initial={{ y: "100%", opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: "100%", opacity: 0 }}
-            transition={{ type: "tween", ease: "easeOut", duration: 0.15 }}
-            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking modal
-            className="w-full max-w-md bg-[#0b0b0c] rounded-t-[28px] shadow-2xl p-6 pb-8 border-t border-white/6"
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto"
+            onClick={onClose}
+          />
+          
+          {/* 2. The Modal */}
+          <motion.div
+            initial={{ y: "100%" }} 
+            animate={{ y: 0 }} 
+            exit={{ y: "100%" }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="relative w-full md:w-[400px] bg-white rounded-t-2xl md:rounded-2xl shadow-2xl overflow-hidden pointer-events-auto max-h-[85vh] flex flex-col pb-safe"
           >
-            <div className="w-10 h-1.5 bg-gray-800 rounded-full mx-auto mb-4" />
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold text-gray-100">Filters</h2>
-              <button onClick={onClose} className="text-gray-400 hover:text-gray-200" aria-label="Close filters">
-                <X size={18} />
+            {/* Header */}
+            <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-[#FFFCF7]">
+              <div>
+                <h2 className="text-lg font-serif font-bold text-gray-900">Filter Collection</h2>
+                <p className="text-xs text-gray-500">Select a category</p>
+              </div>
+              <button 
+                onClick={onClose} 
+                className="p-2 hover:bg-gray-200 rounded-full transition-colors bg-white shadow-sm border border-gray-100"
+              >
+                <X size={18} className="text-gray-600" />
               </button>
             </div>
-            <div className="flex flex-wrap gap-3">
-              {FILTER_OPTIONS.map((f) => (
-                <motion.button
-                  key={f.id}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => onFilterSelect(f.id)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition ${
-                    currentFilter === f.id ? "bg-blue-600 text-white" : "bg-white/10 text-gray-300 hover:bg-white/20 hover:text-white"
-                  }`}
-                >
-                  {f.label}
-                </motion.button>
-              ))}
+
+            {/* Options List */}
+            <div className="p-2 overflow-y-auto">
+              <div className="flex flex-col">
+                {filterOptions.map((f) => (
+                  <button
+                    key={f.id}
+                    onClick={() => {
+                      onFilterSelect(f.id);
+                      onClose();
+                    }}
+                    className={`px-5 py-4 text-sm font-medium transition-all flex justify-between items-center border-b border-gray-50 last:border-0 ${
+                      currentFilter === f.id
+                        ? 'text-[#B08D55] bg-[#B08D55]/5'
+                        : 'text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    {f.name}
+                    {currentFilter === f.id && <Check size={16} className="text-[#B08D55]" />}
+                  </button>
+                ))}
+              </div>
+            </div>
+              
+            {/* Footer Actions */}
+            <div className="p-5 border-t border-gray-100 bg-white flex gap-3">
+              <button 
+                onClick={() => { onFilterSelect('All'); onClose(); }}
+                className="flex-1 border border-gray-200 py-3 rounded-sm text-xs font-bold text-gray-600 uppercase tracking-widest hover:bg-gray-50"
+              >
+                Reset
+              </button>
+              <button 
+                onClick={onClose}
+                className="flex-1 bg-[#1A1A1A] text-white py-3 rounded-sm text-xs font-bold uppercase tracking-widest hover:bg-black shadow-lg"
+              >
+                Show Results
+              </button>
             </div>
           </motion.div>
-        </motion.div>
+        </div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body // RENDER IN BODY
   );
 };
