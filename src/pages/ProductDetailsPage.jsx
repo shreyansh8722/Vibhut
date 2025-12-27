@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { 
   Star, ChevronRight, Loader2, Truck, CheckCircle2, ShieldCheck, 
-  Sparkles, Ticket, ChevronDown, Zap, PlayCircle, Eye, RefreshCw, 
-  Package, Info, CreditCard, Gift, Timer, Flame, ArrowRight
+  Sparkles, Ticket, ChevronDown, Zap, Eye, RefreshCw, 
+  Package, Info, CreditCard, Gift, Timer, ArrowRight
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useProducts } from '../context/ProductContext';
@@ -20,7 +20,6 @@ const ProductDetailsPage = () => {
   const [pincode, setPincode] = useState('');
   const [deliveryDate, setDeliveryDate] = useState(null);
   const [isChecking, setIsChecking] = useState(false);
-  const [activeTab, setActiveTab] = useState('significance');
   
   // Accordion States
   const [openSections, setOpenSections] = useState({
@@ -35,7 +34,6 @@ const ProductDetailsPage = () => {
   
   const [showStickyBar, setShowStickyBar] = useState(false);
   const [viewCount, setViewCount] = useState(112);
-  const [stockLeft, setStockLeft] = useState(7);
   const [activeCoupon, setActiveCoupon] = useState(null);
   const [orderTimer, setOrderTimer] = useState({ m: 14, s: 59 });
 
@@ -46,7 +44,6 @@ const ProductDetailsPage = () => {
   const ENERGIZATION_COST = 151;
 
   const product = products.find(p => String(p.id) === id);
-  // Recommendations logic: simple category match
   const recommendations = products
     .filter(p => p.category === product?.category && p.id !== product?.id)
     .slice(0, 4);
@@ -59,7 +56,6 @@ const ProductDetailsPage = () => {
     { qty: 3, label: "Family", discount: 15, tag: "Best Value" }
   ];
 
-  // Logic: Sticky Bar & Urgency Timers
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => setShowStickyBar(!entry.isIntersecting),
@@ -70,12 +66,10 @@ const ProductDetailsPage = () => {
   }, []);
 
   useEffect(() => {
-    // Fake "Live" View Count fluctuation
     const interval = setInterval(() => {
        setViewCount(prev => prev + (Math.random() > 0.5 ? 1 : -1));
     }, 5000);
     
-    // Countdown Timer (Order within XX mins)
     const timer = setInterval(() => {
       setOrderTimer(prev => {
         if (prev.s === 0) return { m: prev.m - 1, s: 59 };
@@ -135,9 +129,7 @@ const ProductDetailsPage = () => {
             <Link to="/shop" className="hover:text-[var(--color-primary)]">Shop</Link> <ChevronRight size={10} />
             <span className="text-black font-bold truncate max-w-[150px]">{product.name}</span>
           </div>
-          <div className="flex items-center gap-1 text-[10px] text-red-600 font-bold uppercase animate-pulse">
-             <Flame size={12} fill="currentColor" /> Only {stockLeft} Left
-          </div>
+          {/* REMOVED: Stock Left Warning */}
         </div>
       </div>
 
@@ -152,33 +144,22 @@ const ProductDetailsPage = () => {
           {/* 3. RIGHT: BUY BOX */}
           <div className="w-full lg:w-[42%]">
             
-            {/* INFINITE MARQUEE STRIP */}
-<div className="w-full bg-black text-white rounded overflow-hidden mb-5 py-2.5 relative border border-gray-800 shadow-lg group">
-   {/* Gradients to fade edges */}
-   <div className="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-black to-transparent z-10"></div>
-   <div className="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-black to-transparent z-10"></div>
-   
-   {/* Animated Container */}
-   <div className="animate-marquee flex gap-10 text-[9px] font-bold uppercase tracking-[0.2em] text-heritage-saffron">
-      {/* Set 1 */}
-      <span className="flex items-center gap-2 flex-shrink-0"><Sparkles size={10}/> 100% Authentic From Kashi</span>
-      <span className="flex items-center gap-2 flex-shrink-0"><ShieldCheck size={10}/> Lab Certified Purity</span>
-      <span className="flex items-center gap-2 flex-shrink-0"><Zap size={10}/> Energized by Vedic Pandits</span>
-      <span className="flex items-center gap-2 flex-shrink-0"><RefreshCw size={10}/> 7-Day Easy Returns</span>
-      
-      {/* Set 2 (Duplicate) */}
-      <span className="flex items-center gap-2 flex-shrink-0"><Sparkles size={10}/> 100% Authentic From Kashi</span>
-      <span className="flex items-center gap-2 flex-shrink-0"><ShieldCheck size={10}/> Lab Certified Purity</span>
-      <span className="flex items-center gap-2 flex-shrink-0"><Zap size={10}/> Energized by Vedic Pandits</span>
-      <span className="flex items-center gap-2 flex-shrink-0"><RefreshCw size={10}/> 7-Day Easy Returns</span>
-
-      {/* Set 3 (Duplicate for wider screens) */}
-      <span className="flex items-center gap-2 flex-shrink-0"><Sparkles size={10}/> 100% Authentic From Kashi</span>
-      <span className="flex items-center gap-2 flex-shrink-0"><ShieldCheck size={10}/> Lab Certified Purity</span>
-      <span className="flex items-center gap-2 flex-shrink-0"><Zap size={10}/> Energized by Vedic Pandits</span>
-      <span className="flex items-center gap-2 flex-shrink-0"><RefreshCw size={10}/> 7-Day Easy Returns</span>
-   </div>
-</div>
+            {/* INFINITE MARQUEE STRIP - BLACK & WHITE */}
+            <div className="w-full bg-black text-white rounded overflow-hidden mb-5 py-2.5 relative border border-gray-900 shadow-lg group">
+               <div className="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-black to-transparent z-10"></div>
+               <div className="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-black to-transparent z-10"></div>
+               
+               <div className="animate-marquee flex gap-10 text-[9px] font-bold uppercase tracking-[0.2em]">
+                  {[1,2,3].map((set) => (
+                    <React.Fragment key={set}>
+                      <span className="flex items-center gap-2 flex-shrink-0"><Sparkles size={10}/> 100% Authentic</span>
+                      <span className="flex items-center gap-2 flex-shrink-0"><ShieldCheck size={10}/> Lab Certified</span>
+                      <span className="flex items-center gap-2 flex-shrink-0"><Zap size={10}/> Energized in Kashi</span>
+                      <span className="flex items-center gap-2 flex-shrink-0"><RefreshCw size={10}/> 7-Day Returns</span>
+                    </React.Fragment>
+                  ))}
+               </div>
+            </div>
 
             {/* Title & Reviews */}
             <div className="mb-5">
@@ -188,12 +169,12 @@ const ProductDetailsPage = () => {
                 
                 <div className="flex items-center justify-between border-b border-gray-100 pb-4">
                    <div className="flex items-center gap-2 cursor-pointer" onClick={() => document.getElementById('details').scrollIntoView({ behavior: 'smooth'})}>
-                      <div className="flex text-amber-500 gap-0.5">
+                      <div className="flex text-yellow-500 gap-0.5">
                         {[1,2,3,4,5].map(i => <Star key={i} size={14} fill="currentColor" strokeWidth={0} />)}
                       </div>
-                      <span className="text-xs font-bold text-gray-400 underline decoration-dotted">245 Reviews</span>
+                      <span className="text-xs font-bold text-[var(--color-primary)] underline decoration-dotted">245 Reviews</span>
                    </div>
-                   <div className="flex items-center gap-2 text-[10px] font-bold uppercase text-red-600 bg-red-50 px-2 py-1 rounded border border-red-100">
+                   <div className="flex items-center gap-2 text-[10px] font-bold uppercase text-yellow-900 bg-amber-400 px-3 py-1 rounded-full shadow-sm animate-pulse">
                       <Eye size={12} /> {viewCount} Viewing Now
                    </div>
                 </div>
@@ -202,29 +183,29 @@ const ProductDetailsPage = () => {
             {/* PRICE & URGENCY */}
             <div className="mb-5">
                <div className="flex items-end gap-3 mb-1">
-                  <span className="text-4xl font-heading font-bold text-black">₹{totalPrice.toLocaleString()}</span>
+                  <span className="text-4xl font-heading font-bold text-[var(--color-primary)]">₹{totalPrice.toLocaleString()}</span>
                   {comparePrice > 0 && (
                      <span className="text-lg text-gray-400 line-through mb-1">₹{(comparePrice * quantity).toLocaleString()}</span>
                   )}
                   {comparePrice > 0 && (
-                    <span className="text-[10px] font-bold text-white bg-[var(--color-primary)] px-2 py-1 rounded mb-1.5 shadow-sm">
+                    <span className="text-[10px] font-bold text-white bg-red-600 px-2 py-1 rounded mb-1.5 shadow-md">
                        {Math.round(((comparePrice - comboPricePerUnit) / comparePrice) * 100)}% OFF
                     </span>
                   )}
                </div>
-               <p className="text-[11px] text-[var(--color-primary)] font-bold flex items-center gap-1 animate-pulse">
-                  <Timer size={12} /> Order in {orderTimer.m}m {orderTimer.s}s for dispatch today!
+               <p className="text-[11px] text-orange-700 font-bold flex items-center gap-1">
+                  <Timer size={12} className="text-orange-500" /> Order in <span className="text-red-600 font-extrabold">{orderTimer.m}m {orderTimer.s}s</span> for dispatch today!
                </p>
             </div>
 
-            {/* COUPONS (Below Price) */}
-            <div className="mb-6 bg-yellow-50/50 border border-dashed border-yellow-200 rounded-lg p-3">
+            {/* COUPONS */}
+            <div className="mb-6 bg-yellow-50 border-2 border-dashed border-yellow-400 rounded-lg p-3">
                <div className="flex justify-between items-center">
                    <div className="flex items-center gap-2">
-                      <Ticket size={14} className="text-yellow-600" />
-                      <span className="text-xs font-bold text-gray-800">Save Extra ₹100</span>
+                      <Ticket size={14} className="text-yellow-700" />
+                      <span className="text-xs font-bold text-black">Save Extra ₹100</span>
                    </div>
-                   <button onClick={() => handleCopyCoupon('WELCOME100')} className="text-[10px] font-bold text-[var(--color-primary)] uppercase bg-white px-2 py-1 rounded border border-gray-200 shadow-sm">
+                   <button onClick={() => handleCopyCoupon('WELCOME100')} className="text-[10px] font-bold text-white uppercase bg-black px-3 py-1 rounded shadow-sm hover:bg-gray-800 transition-colors">
                        {activeCoupon === 'WELCOME100' ? 'APPLIED' : 'APPLY "WELCOME100"'}
                    </button>
                </div>
@@ -238,7 +219,7 @@ const ProductDetailsPage = () => {
                     <div 
                       key={combo.qty}
                       onClick={() => setQuantity(combo.qty)}
-                      className={`flex-1 cursor-pointer border rounded p-2 text-center transition-all relative overflow-hidden ${quantity === combo.qty ? 'border-black bg-black text-white shadow-lg scale-[1.02]' : 'border-gray-200 bg-white text-gray-600 hover:border-black'}`}
+                      className={`flex-1 cursor-pointer border rounded p-2 text-center transition-all relative overflow-hidden ${quantity === combo.qty ? 'border-[var(--color-primary)] bg-[var(--color-primary)] text-white shadow-lg scale-[1.02]' : 'border-gray-200 bg-white text-gray-600 hover:border-[var(--color-primary)]'}`}
                     >
                        {combo.discount > 0 && (
                           <div className="absolute top-0 right-0 bg-yellow-400 text-black text-[8px] font-bold px-1.5 py-0.5 rounded-bl">
@@ -253,12 +234,11 @@ const ProductDetailsPage = () => {
             </div>
 
             {/* --- PRAN PRATISTHA (ALIVE EFFECT) --- */}
-            {/* Added: 'ring' animation, Gold border, Free Gift Badge */}
-            <div className={`mb-6 border-2 rounded-xl overflow-hidden transition-all duration-300 relative ${addEnergization ? 'border-yellow-500 bg-yellow-50 shadow-[0_0_15px_rgba(234,179,8,0.2)]' : 'border-gray-200 bg-white'}`}>
+            <div className={`mb-6 border-2 rounded-xl overflow-hidden transition-all duration-300 relative ${addEnergization ? 'border-amber-400 bg-amber-50 shadow-md' : 'border-gray-200 bg-white'}`}>
                
-               {/* "FREE GIFTS" BADGE */}
-               <div className="absolute top-0 right-0 bg-gradient-to-r from-[var(--color-primary)] to-red-600 text-white text-[9px] font-bold px-2 py-1 rounded-bl-lg z-10 shadow-sm">
-                  + FREE GANGA JAL & BHABHUTI
+               {/* FIXED: Free Gift Badge is now SOLID RED (bg-red-600) to match 50% OFF */}
+               <div className="absolute top-0 right-0 bg-red-600 text-white text-[9px] font-bold px-3 py-1 rounded-bl-lg z-10 shadow-sm">
+                  + FREE GANGA JAL
                </div>
 
                <div 
@@ -266,13 +246,13 @@ const ProductDetailsPage = () => {
                  className="p-4 cursor-pointer flex items-center justify-between relative z-0"
                >
                   <div className="flex items-center gap-3">
-                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${addEnergization ? 'bg-yellow-500 border-yellow-500 scale-110' : 'border-gray-300 bg-white'}`}>
+                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${addEnergization ? 'bg-amber-500 border-amber-500 scale-110' : 'border-gray-300 bg-white'}`}>
                         {addEnergization && <CheckCircle2 size={12} className="text-white" />}
                      </div>
                      <div>
                         <div className="flex items-center gap-2">
                            <span className="font-bold text-sm text-black uppercase tracking-wide flex items-center gap-1">
-                              Add Pran Pratistha <Sparkles size={12} className={addEnergization ? "text-yellow-600 animate-pulse" : "text-gray-400"} />
+                              Add Pran Pratistha <Sparkles size={12} className={addEnergization ? "text-amber-500 animate-pulse" : "text-gray-400"} />
                            </span>
                         </div>
                         <p className="text-[10px] text-gray-500 mt-0.5">Vedic energization in your name + Video Proof.</p>
@@ -285,15 +265,15 @@ const ProductDetailsPage = () => {
                </div>
 
                {addEnergization && (
-                 <div className="px-4 pb-4 animate-fade-in border-t border-yellow-200/50 mt-1 pt-3">
+                 <div className="px-4 pb-4 animate-fade-in border-t border-amber-200 mt-1 pt-3">
                     <input 
                       type="text" placeholder="Enter Name for Sankalp (e.g. Rahul)" 
-                      className="w-full text-xs p-2.5 border border-yellow-300 rounded bg-white focus:border-[var(--color-primary)] outline-none mb-2 shadow-inner"
+                      className="w-full text-xs p-2.5 border border-amber-300 rounded bg-white focus:border-amber-500 outline-none mb-2 shadow-inner text-black"
                       value={devoteeName} onChange={(e) => setDevoteeName(e.target.value)}
                     />
-                    <div className="flex items-center gap-2 text-[10px] text-gray-600 bg-white p-2 rounded border border-yellow-100">
-                       <Gift size={12} className="text-[var(--color-primary)]" />
-                       <span>You will receive <strong>Abhimantrit Ganga Jal</strong> & <strong>Kashi Bhabhuti</strong> with this order.</span>
+                    <div className="flex items-center gap-2 text-[10px] text-gray-600 bg-white p-2 rounded border border-gray-100">
+                       <Gift size={12} className="text-amber-600" />
+                       <span>You will receive <strong>Abhimantrit Ganga Jal</strong> with this order.</span>
                     </div>
                  </div>
                )}
@@ -301,34 +281,32 @@ const ProductDetailsPage = () => {
 
             {/* --- BUTTONS --- */}
             <div ref={mainActionsRef} className="flex flex-col gap-3 mb-4">
-               {/* PAY ONLINE - POP EFFECT */}
+               {/* PREPAID BUTTON */}
                <button 
                   onClick={() => handleDirectOrder('ONLINE')}
-                  className="w-full py-4 bg-gradient-to-r from-[var(--color-primary)] to-red-600 text-white rounded-lg shadow-lg hover:shadow-red-200 hover:-translate-y-1 transition-all flex items-center justify-center gap-3 group relative overflow-hidden"
+                  className="w-full py-4 bg-[var(--color-primary)] text-yellow-300 rounded-lg shadow-xl hover:shadow-green-900/40 hover:-translate-y-1 transition-all flex items-center justify-center gap-3 group relative overflow-hidden border border-yellow-500/30"
                >
-                  {/* Shimmer Effect */}
-                  <div className="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent z-10"></div>
-                  
                   <div className="flex flex-col items-center leading-none relative z-20">
-                     <div className="flex items-center gap-2 font-bold text-sm uppercase tracking-widest">
+                     <div className="flex items-center gap-2 font-bold text-sm uppercase tracking-widest text-yellow-300">
                         <Zap size={18} className="fill-yellow-300 text-yellow-300 animate-pulse" /> 
                         Pay Online
                      </div>
-                     <span className="text-[9px] text-yellow-100 mt-1 font-medium bg-black/20 px-2 py-0.5 rounded">
+                     <span className="text-[9px] text-white mt-1 font-medium bg-black/30 px-2 py-0.5 rounded">
                         Fastest Dispatch + Extra ₹{ONLINE_DISCOUNT} OFF
                      </span>
                   </div>
                </button>
 
+               {/* COD BUTTON */}
                <button 
                   onClick={() => handleDirectOrder('COD')}
-                  className="w-full py-3.5 bg-white border border-gray-300 text-black font-bold text-xs uppercase tracking-widest rounded-lg hover:border-black transition-all flex items-center justify-center gap-2"
+                  className="w-full py-3.5 bg-white border-2 border-[var(--color-primary)] text-[var(--color-primary)] font-bold text-xs uppercase tracking-widest rounded-lg hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
                >
                   <CreditCard size={14} /> Cash on Delivery
                </button>
             </div>
 
-            {/* DELIVERY CHECKER (Immediately below Buttons) */}
+            {/* DELIVERY CHECKER */}
             <div className="mb-8">
                <div className="flex gap-2 h-10">
                   <div className="relative flex-1">
@@ -336,7 +314,7 @@ const ProductDetailsPage = () => {
                       <input 
                          type="text" maxLength={6} placeholder="Enter Pincode to Check"
                          value={pincode} onChange={(e) => setPincode(e.target.value)}
-                         className="w-full h-full pl-9 pr-4 text-xs border border-gray-300 rounded focus:border-black outline-none bg-white"
+                         className="w-full h-full pl-9 pr-4 text-xs border border-gray-300 rounded focus:border-[var(--color-primary)] outline-none bg-white"
                       />
                   </div>
                   <button onClick={checkDelivery} className="px-5 h-full bg-black text-white text-[10px] font-bold uppercase rounded tracking-widest hover:bg-gray-800">
@@ -344,7 +322,7 @@ const ProductDetailsPage = () => {
                   </button>
                </div>
                {deliveryDate && (
-                  <p className="text-[10px] text-[var(--color-success)] font-bold mt-2 flex items-center gap-1 animate-fade-in">
+                  <p className="text-[10px] text-green-600 font-bold mt-2 flex items-center gap-1 animate-fade-in">
                      <CheckCircle2 size={12} /> Eligible for Express Delivery by {deliveryDate}
                   </p>
                )}
@@ -362,11 +340,11 @@ const ProductDetailsPage = () => {
                    </button>
                    <div className={`overflow-hidden transition-[max-height] duration-500 ease-in-out ${openSections.details ? 'max-h-[500px]' : 'max-h-0'}`}>
                       <div className="pb-4 text-sm text-gray-600 space-y-3 leading-relaxed">
-                         <p>The <strong>{product.name}</strong> is a consecrated tool from Varanasi. Selected for its seed geometry, it aligns your aura with prosperity.</p>
+                         <p>The <strong>{product.name}</strong> is a consecrated tool from Varanasi.</p>
                          <ul className="grid grid-cols-1 gap-2 mt-2">
                             {["Original Lab Certified Bead", "Natural, Untreated Material", "Sourced from Nepal/Indonesia"].map((feat, i) => (
                                <li key={i} className="flex items-center gap-2 text-black font-medium text-xs">
-                                  <div className="w-1 h-1 bg-black rounded-full"></div> {feat}
+                                  <div className="w-1.5 h-1.5 bg-[var(--color-primary)] rounded-full"></div> {feat}
                                </li>
                             ))}
                          </ul>
@@ -374,43 +352,26 @@ const ProductDetailsPage = () => {
                    </div>
                 </div>
 
-                {/* 2. SHIPPING */}
+                {/* 2. SHIPPING & RETURNS */}
                 <div className="border-b border-gray-200">
                    <button onClick={() => toggleSection('shipping')} className="w-full py-4 flex items-center justify-between text-left group">
                       <span className="text-xs font-bold uppercase tracking-widest text-black flex items-center gap-2">
-                         <Package size={14} strokeWidth={1.5} /> Shipping
+                         <Package size={14} strokeWidth={1.5} /> Shipping & Returns
                       </span>
                       <ChevronDown size={14} className={`transition-transform duration-300 ${openSections.shipping ? 'rotate-180' : ''}`} />
                    </button>
                    <div className={`overflow-hidden transition-[max-height] duration-500 ease-in-out ${openSections.shipping ? 'max-h-[200px]' : 'max-h-0'}`}>
                       <div className="pb-4 text-xs text-gray-500 space-y-2">
                          <p><strong>Dispatch:</strong> Within 24 hours.</p>
-                         <p><strong>Partners:</strong> Bluedart, Delhivery.</p>
-                      </div>
-                   </div>
-                </div>
-
-                {/* 3. RETURNS */}
-                <div className="border-b border-gray-200">
-                   <button onClick={() => toggleSection('returns')} className="w-full py-4 flex items-center justify-between text-left group">
-                      <span className="text-xs font-bold uppercase tracking-widest text-black flex items-center gap-2">
-                         <RefreshCw size={14} strokeWidth={1.5} /> Returns
-                      </span>
-                      <ChevronDown size={14} className={`transition-transform duration-300 ${openSections.returns ? 'rotate-180' : ''}`} />
-                   </button>
-                   <div className={`overflow-hidden transition-[max-height] duration-500 ease-in-out ${openSections.returns ? 'max-h-[200px]' : 'max-h-0'}`}>
-                      <div className="pb-4 text-xs text-gray-500 space-y-2">
-                         <p><strong>Policy:</strong> 7-Day Easy Returns.</p>
-                         <p>Damaged/Wrong product? Instant replacement.</p>
+                         <p><strong>Returns:</strong> 7-Day Easy Returns.</p>
                       </div>
                    </div>
                 </div>
             </div>
-
           </div>
         </div>
 
-        {/* 4. RECOMMENDATIONS (You May Also Like) */}
+        {/* 4. RECOMMENDATIONS */}
         <div className="mt-16 border-t border-gray-200 pt-10">
            <div className="flex items-center justify-between mb-6">
               <h3 className="font-heading text-2xl font-bold text-black">You May Also Like</h3>
@@ -422,9 +383,6 @@ const ProductDetailsPage = () => {
                  <Link key={rec.id} to={`/product/${rec.id}`} className="group block">
                     <div className="aspect-[4/5] bg-gray-100 rounded-lg overflow-hidden mb-3 relative">
                        <img src={rec.featuredImageUrl} alt={rec.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                       <div className="absolute bottom-2 right-2 bg-white rounded-full p-2 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
-                          <ArrowRight size={14} />
-                       </div>
                     </div>
                     <h4 className="font-bold text-sm text-black line-clamp-1 group-hover:text-[var(--color-primary)] transition-colors">{rec.name}</h4>
                     <p className="text-xs text-gray-500">₹{rec.price}</p>
@@ -450,8 +408,8 @@ const ProductDetailsPage = () => {
              </div>
           </div>
           <div className="flex gap-2 flex-1 md:flex-none md:w-auto">
-             <button onClick={() => handleDirectOrder('COD')} className="flex-1 md:w-40 py-3 bg-white border border-black text-black text-[10px] md:text-xs font-bold uppercase rounded">COD</button>
-             <button onClick={() => handleDirectOrder('ONLINE')} className="flex-[1.5] md:w-56 py-3 bg-[var(--color-primary)] text-white text-[10px] md:text-xs font-bold uppercase rounded shadow-lg">Pay Online & Save</button>
+             <button onClick={() => handleDirectOrder('COD')} className="flex-1 md:w-40 py-3 bg-white border-2 border-[var(--color-primary)] text-[var(--color-primary)] text-[10px] md:text-xs font-bold uppercase rounded">COD</button>
+             <button onClick={() => handleDirectOrder('ONLINE')} className="flex-[1.5] md:w-56 py-3 bg-[var(--color-primary)] text-yellow-300 text-[10px] md:text-xs font-bold uppercase rounded shadow-lg">Pay Online & Save</button>
           </div>
         </div>
       </div>

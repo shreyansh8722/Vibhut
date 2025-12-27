@@ -7,19 +7,18 @@
     animation: marquee 60s linear infinite;
   }
   
-  /* Premium Glass Effect - Updated for White Background */
+  /* Premium Glass Effect - Clean White */
   .glass-nav {
-    background: rgba(255, 255, 255, 0.9); /* Pure white base */
+    background: rgba(255, 255, 255, 0.95); /* Pure white base */
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid rgba(229, 231, 235, 0.5);
+    border-bottom: 1px solid rgba(229, 231, 235, 0.5); /* Subtle gray border */
   }
 
   .text-shadow-sm {
     text-shadow: 0 1px 2px rgba(0,0,0,0.1);
   }
   
-  /* Custom Scrollbar for products */
   .custom-scrollbar::-webkit-scrollbar {
     height: 4px;
     width: 4px;
@@ -28,7 +27,7 @@
     background: #f1f1f1;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #d1d5db;
+    background: #2E4F3E; /* Green branding on scrollbar */
     border-radius: 4px;
   }
 }
@@ -39,27 +38,27 @@
 }
 
 @theme {
-  /* --- TYPOGRAPHY (Elegant) --- */
+  /* --- TYPOGRAPHY --- */
   --font-heading: "Crimson Pro", serif; 
   --font-body: "Inter", sans-serif;
 
-  /* --- ROYAL KASHI PALETTE --- */
+  /* --- VIBHUT BRANDING --- */
   
-  /* Primary: Deep Vermilion/Saffron (The color of Sindoor/Hanuman Ji) */
-  --color-primary: #D94F04; 
-  --color-primary-dark: #9A3412;
+  /* Primary: Deep Forest Green (Used for Buttons, Logo, Highlights) */
+  --color-primary: #2E4F3E; 
+  --color-primary-dark: #1F362A;
   
-  /* --- BACKGROUNDS UPDATED (No More Yellow) --- */
-  --color-bg-body: #FFFFFF;  /* Pure White (Matches Skeleton) */
-  --color-bg-subtle: #F9FAFB; /* Cool Gray 50 (Professional) */
-  
-  /* Text: Warm Charcoal (Softer than pure black) */
-  --color-text-main: #111827; /* Gray 900 */
-  --color-text-muted: #4B5563; /* Gray 600 */
+  /* Accents: Antique Gold */
+  --color-gold: #C5A059;       
+  --color-gold-light: #E5C580; 
 
-  /* Accents */
-  --color-gold: #B45309;       /* Antique Gold */
-  --color-gold-light: #F59E0B; /* Bright Gold for stars */
+  /* --- STANDARD NEUTRALS (Restored) --- */
+  --color-bg-body: #FFFFFF;     /* Pure White */
+  --color-bg-subtle: #F9FAFB;   /* Gray 50 */
+  
+  /* Text */
+  --color-text-main: #111827;   /* Gray 900 (Black) */
+  --color-text-muted: #4B5563;  /* Gray 600 */
 
   /* --- ELEVATION --- */
   --shadow-card: 0 2px 8px -2px rgba(0, 0, 0, 0.05);
@@ -75,7 +74,13 @@
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
-    color: var(--color-text-main);
+    color: var(--color-text-main); /* Headings stay Black */
     letter-spacing: -0.01em; 
+  }
+  
+  /* Selection: Green background, White text */
+  ::selection {
+    background-color: var(--color-primary);
+    color: #ffffff;
   }
 }

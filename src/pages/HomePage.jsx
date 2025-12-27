@@ -54,7 +54,7 @@ const Home = () => {
             
             <div className="flex flex-col md:flex-row items-end justify-between mb-10 gap-4">
                <h2 className="font-heading text-3xl md:text-4xl font-bold text-black">
-                 Best Selling Artifacts
+                 Best Sellers 
                </h2>
                
                <Link to="/shop?sort=best_selling" className="hidden md:flex items-center gap-2 text-sm font-bold text-black hover:text-[var(--color-primary)] transition-colors uppercase tracking-wider">

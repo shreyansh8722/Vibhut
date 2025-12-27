@@ -56,7 +56,6 @@ export const Navbar = () => {
   const [currentAnnouncement, setCurrentAnnouncement] = useState(0);
   const [hoveredIndex, setHoveredIndex] = useState(null);
   
-  // --- SEARCH STATES ---
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [showResults, setShowResults] = useState(false);
@@ -67,7 +66,6 @@ export const Navbar = () => {
   const navigate = useNavigate();
   const cartItemCount = cartItems.reduce((total, item) => total + (item.quantity || 1), 0);
 
-  // Rotate Announcements
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentAnnouncement((prev) => (prev + 1) % announcements.length);
@@ -75,11 +73,9 @@ export const Navbar = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // --- SMART SEARCH LOGIC (Desktop) ---
   useEffect(() => {
     if (searchQuery.trim().length > 1) {
       const lowerQuery = searchQuery.toLowerCase();
-      
       const filtered = products.filter(p => {
          const name = p.name ? p.name.toLowerCase() : '';
          const cat = p.category ? p.category.toLowerCase() : '';
@@ -94,7 +90,6 @@ export const Navbar = () => {
     }
   }, [searchQuery, products]);
 
-  // Click Outside to close search dropdown
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (searchRef.current && !searchRef.current.contains(event.target)) {
@@ -124,8 +119,8 @@ export const Navbar = () => {
       <NewsletterPopup />
       <SearchPopup isOpen={isSearchPopupOpen} onClose={() => setIsSearchPopupOpen(false)} />
 
-      {/* 1. TOP ANNOUNCEMENT STRIP */}
-      <div className="bg-black text-white h-[32px] w-full relative overflow-hidden z-[160]">
+      {/* 1. TOP ANNOUNCEMENT STRIP - Forest Green Background for Branding */}
+      <div className="bg-[var(--color-primary)] text-white h-[32px] w-full relative overflow-hidden z-[160]">
         <div className="container mx-auto h-full flex items-center justify-center">
           <AnimatePresence mode="wait">
             <motion.div
@@ -141,8 +136,8 @@ export const Navbar = () => {
         </div>
       </div>
 
-      {/* 2. MAIN NAV BAR */}
-      <nav className="sticky top-0 bg-white z-[140] border-b border-gray-100 shadow-sm transition-all duration-300">
+      {/* 2. MAIN NAV BAR - Clean White */}
+      <nav className="sticky top-0 bg-white/95 backdrop-blur-md z-[140] border-b border-gray-100 shadow-sm transition-all duration-300">
         <div className="container mx-auto px-4 md:px-8 py-4">
           <div className="flex justify-between items-center gap-4 md:gap-8">
             
@@ -156,17 +151,18 @@ export const Navbar = () => {
                 <Menu size={24} />
               </button>
               <Link to="/" aria-label="Vishwanatham Home">
+                {/* Logo colored in Forest Green */}
                 <BrandLogo className="h-8 md:h-10 w-auto text-[var(--color-primary)]" />
               </Link>
             </div>
 
-            {/* --- SMART SEARCH BAR (Desktop Only) --- */}
+            {/* --- SEARCH BAR (Standard Gray, Green focus) --- */}
             <div className="hidden md:block flex-grow max-w-xl relative" ref={searchRef}>
               <form onSubmit={handleSearchSubmit} className="relative group">
                 <input 
                   type="text" 
                   placeholder="Search for 'Rudraksha', 'Gemstones'..." 
-                  className="w-full bg-gray-50 text-black border border-transparent focus:border-gray-300 focus:bg-white rounded-full py-2.5 pl-5 pr-12 text-base transition-all outline-none placeholder:text-gray-400 placeholder:text-sm"
+                  className="w-full bg-gray-50 text-black border border-transparent focus:border-[var(--color-primary)] focus:bg-white rounded-full py-2.5 pl-5 pr-12 text-base transition-all outline-none placeholder:text-gray-400 placeholder:text-sm"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onFocus={() => searchQuery.length > 1 && setShowResults(true)}
@@ -233,7 +229,7 @@ export const Navbar = () => {
 
             {/* Right Actions */}
             <div className="flex items-center gap-5">
-              {/* FIXED: Removed nested <button> inside <Link> and applied styles directly to Link */}
+              {/* Consult Button: Green Border/Text */}
               <Link 
                 to="/consult" 
                 className="hidden lg:flex items-center gap-2 border border-[var(--color-primary)] text-[var(--color-primary)] px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider hover:bg-[var(--color-primary)] hover:text-white transition-all"
@@ -243,7 +239,6 @@ export const Navbar = () => {
               </Link>
 
               <div className="flex items-center gap-5 text-gray-800">
-                 {/* Mobile Search Icon Trigger */}
                  <button 
                    className="md:hidden" 
                    onClick={() => setIsSearchPopupOpen(true)}
@@ -252,7 +247,6 @@ export const Navbar = () => {
                    <Search size={22} />
                  </button>
                  
-                 {/* LINK TO LOGIN PAGE */}
                  <Link 
                    to="/login" 
                    className="hidden md:block hover:text-[var(--color-primary)] transition-colors"
@@ -261,7 +255,6 @@ export const Navbar = () => {
                    <User size={22} strokeWidth={1.5} />
                  </Link>
                  
-                 {/* Cart Trigger */}
                  <button 
                    onClick={() => setIsCartOpen(true)} 
                    className="relative hover:text-[var(--color-primary)] transition-colors"
@@ -279,7 +272,7 @@ export const Navbar = () => {
           </div>
         </div>
 
-        {/* 3. LOWER ROW: Categories (Desktop Mega Menu) */}
+        {/* 3. LOWER ROW: Categories */}
         <div className="hidden md:block border-t border-gray-50">
           <div className="container mx-auto flex justify-center">
             <div className="flex items-center gap-10">
@@ -290,10 +283,11 @@ export const Navbar = () => {
                   onMouseEnter={() => setHoveredIndex(idx)}
                   onMouseLeave={() => setHoveredIndex(null)}
                 >
+                  {/* Standard Black Text, Gold Hover */}
                   <Link 
                     to={item.path} 
                     className={`flex items-center gap-1 text-[13px] font-bold uppercase tracking-widest transition-colors ${
-                      hoveredIndex === idx ? 'text-[var(--color-primary)]' : 'text-gray-800'
+                      hoveredIndex === idx ? 'text-[var(--color-gold)]' : 'text-gray-800'
                     }`}
                   >
                     {item.label}
@@ -324,18 +318,19 @@ export const Navbar = () => {
                             <div className="col-span-1">
                                 <h4 className="font-heading font-bold text-black mb-4 text-lg">Featured</h4>
                                 <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
-                                   <div className="text-xs font-bold text-[var(--color-primary)] mb-1">BESTSELLER</div>
-                                   <div className="font-bold text-sm mb-2">Gauri Shankar Rudraksha</div>
-                                   <Link to="/shop" className="text-xs underline text-gray-600 hover:text-black">View Product</Link>
+                                   <div className="text-xs font-bold text-[var(--color-gold)] mb-1">BESTSELLER</div>
+                                   <div className="font-bold text-sm mb-2 text-black">Gauri Shankar Rudraksha</div>
+                                   <Link to="/shop" className="text-xs underline text-gray-600 hover:text-[var(--color-primary)]">View Product</Link>
                                 </div>
                             </div>
-                            <div className="col-span-2 bg-gradient-to-r from-gray-50 to-white p-6 rounded-lg flex items-center justify-between border border-gray-100">
+                            {/* Featured Box: Green Gradient Background */}
+                            <div className="col-span-2 bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-dark)] p-6 rounded-lg flex items-center justify-between border border-gray-100 text-white">
                                 <div>
-                                   <h5 className="font-heading font-bold text-xl text-[var(--color-primary)]">Confused?</h5>
-                                   <p className="text-sm text-gray-600 mt-1 mb-3 max-w-xs">Talk to our Vedic experts to find the right Rudraksha for your Kundali.</p>
-                                   <Link to="/consult" className="px-4 py-2 bg-[var(--color-primary)] text-white text-xs font-bold uppercase rounded hover:bg-black transition-colors">Chat Now</Link>
+                                   <h5 className="font-heading font-bold text-xl text-[var(--color-gold-light)]">Confused?</h5>
+                                   <p className="text-sm text-gray-200 mt-1 mb-3 max-w-xs">Talk to our Vedic experts to find the right Rudraksha for your Kundali.</p>
+                                   <Link to="/consult" className="px-4 py-2 bg-white text-[var(--color-primary)] text-xs font-bold uppercase rounded hover:bg-[var(--color-gold)] hover:text-white transition-colors">Chat Now</Link>
                                 </div>
-                                <MessageCircle size={48} className="text-[var(--color-primary)] opacity-10" />
+                                <MessageCircle size={48} className="text-white opacity-20" />
                             </div>
                         </div>
                       </motion.div>
@@ -348,7 +343,7 @@ export const Navbar = () => {
         </div>
       </nav>
 
-      {/* MOBILE MENU OVERLAY */}
+      {/* MOBILE MENU */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <>
