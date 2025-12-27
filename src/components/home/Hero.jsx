@@ -1,17 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Phone } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
 // Images
-// Hero1 is in 'public' folder (String path)
-// Hero2 and Hero3 are in 'src/assets' (Imports)
 import hero2 from '../../assets/hero2.webp';
 import hero3 from '../../assets/hero3.webp';
 
 const Hero = () => {
-  // Array of images for the slideshow
   const images = ["/hero1.webp", hero2, hero3]; 
-  
   const [currentImage, setCurrentImage] = useState(0);
 
   // Slideshow Logic
@@ -23,7 +19,9 @@ const Hero = () => {
   }, [images.length]);
 
   return (
-    <div className="relative w-full h-[85vh] bg-black overflow-hidden flex items-end justify-center pb-20">
+    // FIXES: Reduced height further 
+    // h-[50vh] for mobile, md:h-[75vh] for laptop
+    <div className="relative w-full h-[50vh] md:h-[75vh] bg-black overflow-hidden flex items-end justify-center pb-10 md:pb-16">
       
       {/* Background Slideshow */}
       {images.map((img, index) => (
@@ -33,31 +31,22 @@ const Hero = () => {
             index === currentImage ? 'opacity-100' : 'opacity-0'
           }`}
         >
-          {/* OPTIMIZATION: Priority loading for the first image */}
           <img 
             src={img} 
             alt={`Vishwanatham Spiritual Artifacts - Slide ${index + 1}`} 
-            className="w-full h-full object-cover opacity-60"
-            // FIXED: Changed fetchPriority to fetchpriority (lowercase)
+            className="w-full h-full object-cover object-center opacity-60"
             fetchpriority={index === 0 ? "high" : "auto"} 
             loading={index === 0 ? "eager" : "lazy"}      
-            width="1920" 
-            height="1080"
           />
           <div className="absolute inset-0 bg-black/40"></div>
         </div>
       ))}
 
-      {/* Buttons */}
-      <div className="relative z-10 flex flex-col md:flex-row gap-6 animate-fade-in mb-8 md:mb-12">
+      {/* Single Small Minimal Button */}
+      <div className="relative z-10 animate-fade-in">
         <Link to="/shop">
-          <button className="bg-white text-black px-10 py-4 rounded-full font-bold text-sm uppercase tracking-widest hover:bg-[var(--color-primary)] hover:text-white transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.2)] flex items-center gap-2">
-            Shop Collection <ArrowRight size={16} />
-          </button>
-        </Link>
-        <Link to="/consult">
-          <button className="bg-transparent border-2 border-white text-white px-10 py-4 rounded-full font-bold text-sm uppercase tracking-widest hover:bg-white hover:text-black transition-all duration-300 flex items-center gap-2 backdrop-blur-sm">
-            Talk to Astrologer <Phone size={16} />
+          <button className="bg-white text-black px-8 py-3 rounded-full font-bold text-xs uppercase tracking-widest hover:bg-gray-100 transition-all duration-300 shadow-[0_0_15px_rgba(255,255,255,0.3)] hover:scale-105 flex items-center gap-2">
+            Shop Now <ArrowRight size={14} />
           </button>
         </Link>
       </div>

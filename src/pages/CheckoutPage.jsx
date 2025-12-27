@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useCart } from '../context/CartContext';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
-  ShieldCheck, Lock, Truck, CreditCard, Banknote, 
-  AlertCircle, Loader2 
+  Lock, CreditCard, Banknote, AlertCircle, Loader2, ShieldCheck, ChevronRight 
 } from 'lucide-react';
 import BrandLogo from '../components/common/BrandLogo';
 
@@ -16,27 +15,50 @@ import {
 import toast from 'react-hot-toast';
 
 const CheckoutPage = () => {
-  // Safe destructuring with defaults
-  const { cartItems = [], cartTotal = 0, clearCart } = useCart();
+  const { cartItems, clearCart } = useCart();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  // Redirect if cart is empty
+  const [checkoutItems, setCheckoutItems] = useState([]);
+
+  // --- 1. DETERMINE CHECKOUT ITEMS ---
+  // If navigated with state.directPurchase, use that. Otherwise use Cart.
   useEffect(() => {
-    if (!cartItems || cartItems.length === 0) {
-      navigate('/shop');
+    if (location.state?.directPurchase) {
+      setCheckoutItems(location.state.directPurchase);
+    } else {
+      setCheckoutItems(cartItems || []);
     }
-  }, [cartItems, navigate]);
+  }, [location.state, cartItems]);
+
+  // Redirect if NO items at all
+  useEffect(() => {
+    // Only redirect if both are empty (and we've had a chance to load)
+    if ((!cartItems || cartItems.length === 0) && (!location.state?.directPurchase)) {
+       // A small timeout to prevent flicker on reload
+       const timer = setTimeout(() => navigate('/shop'), 100);
+       return () => clearTimeout(timer);
+    }
+  }, [cartItems, location.state, navigate]);
 
   const [formData, setFormData] = useState({
     email: '', firstName: '', lastName: '', address: '',
     apartment: '', city: '', state: '', pincode: '', phone: ''
   });
 
-  const [paymentMethod, setPaymentMethod] = useState('ONLINE');
+  const [paymentMethod, setPaymentMethod] = useState(location.state?.paymentMode || 'ONLINE');
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Totals Logic (Safe Math)
-  const safeTotal = Number(cartTotal) || 0;
+  // --- 2. CALCULATE TOTALS (Fix for Energization) ---
+  const ENERGIZATION_COST = 151;
+
+  const safeTotal = checkoutItems.reduce((acc, item) => {
+    const itemTotal = (Number(item.price || 0) * Number(item.quantity || 1));
+    // If the item has energization enabled, add the cost
+    const energization = item.energization ? ENERGIZATION_COST : 0;
+    return acc + itemTotal + energization;
+  }, 0);
+  
   const shippingCost = safeTotal > 499 ? 0 : 99;
   const codFee = paymentMethod === 'COD' ? 49 : 0;
   const finalTotal = safeTotal + shippingCost + codFee;
@@ -46,7 +68,6 @@ const CheckoutPage = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // --- INTERNAL STOCK CHECK FUNCTION ---
   const checkStockAvailability = async (items) => {
     for (const item of items) {
       try {
@@ -69,14 +90,12 @@ const CheckoutPage = () => {
     return { valid: true };
   };
 
-  // --- PLACE ORDER LOGIC ---
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
     setIsProcessing(true);
 
     try {
-      // 1. RUN SAFETY CHECK
-      const stockStatus = await checkStockAvailability(cartItems);
+      const stockStatus = await checkStockAvailability(checkoutItems);
 
       if (!stockStatus.valid) {
         setIsProcessing(false);
@@ -84,15 +103,16 @@ const CheckoutPage = () => {
         return;
       }
 
-      // 2. PREPARE ORDER DATA
       const orderData = {
-        items: cartItems.map(item => ({
+        items: checkoutItems.map(item => ({
           id: item.id,
           name: item.name,
           quantity: item.quantity,
           price: item.price,
           variant: item.variant || 'Standard',
-          image: item.featuredImageUrl || item.image || ''
+          image: item.featuredImageUrl || item.image || '',
+          energization: item.energization || false, // Save this detail
+          energizationDetails: item.energizationDetails || null
         })),
         totalAmount: finalTotal,
         subtotal: safeTotal,
@@ -106,12 +126,11 @@ const CheckoutPage = () => {
         userEmail: formData.email,
       };
 
-      // 3. SAVE ORDER
       await addDoc(collection(db, 'orders'), orderData);
 
-      // 4. REDUCE STOCK (Batch Update)
+      // Reduce Stock
       const batch = writeBatch(db);
-      cartItems.forEach((item) => {
+      checkoutItems.forEach((item) => {
         const productRef = doc(db, 'products', item.id);
         batch.update(productRef, { 
           stock: increment(-item.quantity) 
@@ -119,9 +138,13 @@ const CheckoutPage = () => {
       });
       await batch.commit();
 
-      // 5. SUCCESS
       setIsProcessing(false);
-      clearCart();
+      
+      // --- CRITICAL FIX: Only clear cart if it wasn't a direct buy ---
+      if (!location.state?.directPurchase) {
+        clearCart();
+      }
+      
       toast.success("Order Placed Successfully!");
       navigate('/order-success'); 
 
@@ -132,7 +155,6 @@ const CheckoutPage = () => {
     }
   };
 
-  // Styles for inputs to avoid repetition - Added Gold focus ring
   const inputClass = "w-full p-3 bg-gray-50 border border-gray-200 rounded text-sm outline-none transition-all focus:bg-white focus:border-[#B08D55] focus:ring-1 focus:ring-[#B08D55]";
 
   return (
@@ -151,6 +173,16 @@ const CheckoutPage = () => {
       </header>
 
       <div className="container mx-auto px-4 py-8 md:py-12">
+        
+        {/* Standard Breadcrumbs */}
+        <div className="max-w-6xl mx-auto mb-8 flex items-center gap-2 text-[10px] font-bold text-gray-500 tracking-widest uppercase">
+          <Link to="/" className="hover:text-[#B08D55] transition-colors">Home</Link> 
+          <ChevronRight size={10} />
+          <Link to="/shop" className="hover:text-[#B08D55] transition-colors">Shop</Link> 
+          <ChevronRight size={10} />
+          <span className="text-gray-900">Checkout</span>
+        </div>
+
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 max-w-6xl mx-auto">
           
           {/* LEFT COLUMN: FORM */}
@@ -159,7 +191,7 @@ const CheckoutPage = () => {
               
               {/* Contact Info */}
               <div className="bg-white p-6 md:p-8 rounded-lg shadow-sm border border-gray-100">
-                <h2 className="font-serif text-xl font-bold mb-6 text-gray-900 flex items-center gap-3">
+                <h2 className="font-heading text-xl font-bold mb-6 text-gray-900 flex items-center gap-3">
                   <span className="w-7 h-7 bg-black text-white rounded-full flex items-center justify-center text-sm font-sans">1</span>
                   Contact Information
                 </h2>
@@ -174,7 +206,7 @@ const CheckoutPage = () => {
 
               {/* Shipping Address */}
               <div className="bg-white p-6 md:p-8 rounded-lg shadow-sm border border-gray-100">
-                <h2 className="font-serif text-xl font-bold mb-6 text-gray-900 flex items-center gap-3">
+                <h2 className="font-heading text-xl font-bold mb-6 text-gray-900 flex items-center gap-3">
                   <span className="w-7 h-7 bg-black text-white rounded-full flex items-center justify-center text-sm font-sans">2</span>
                   Shipping Address
                 </h2>
@@ -191,12 +223,11 @@ const CheckoutPage = () => {
 
               {/* Payment Method */}
               <div className="bg-white p-6 md:p-8 rounded-lg shadow-sm border border-gray-100">
-                <h2 className="font-serif text-xl font-bold mb-6 text-gray-900 flex items-center gap-3">
+                <h2 className="font-heading text-xl font-bold mb-6 text-gray-900 flex items-center gap-3">
                   <span className="w-7 h-7 bg-black text-white rounded-full flex items-center justify-center text-sm font-sans">3</span>
                   Payment Method
                 </h2>
                 <div className="flex flex-col gap-3">
-                  {/* Online Payment */}
                   <label className={`relative flex items-center gap-4 p-4 border rounded-lg cursor-pointer transition-all ${paymentMethod === 'ONLINE' ? 'border-[#B08D55] bg-orange-50/30 ring-1 ring-[#B08D55]/20' : 'border-gray-200 hover:border-gray-300'}`}>
                     <input type="radio" name="payment" value="ONLINE" checked={paymentMethod === 'ONLINE'} onChange={() => setPaymentMethod('ONLINE')} className="accent-[#B08D55] w-5 h-5" />
                     <div className="flex-1">
@@ -206,7 +237,6 @@ const CheckoutPage = () => {
                     <CreditCard className={paymentMethod === 'ONLINE' ? "text-[#B08D55]" : "text-gray-400"} />
                   </label>
 
-                  {/* COD */}
                   <label className={`relative flex items-center gap-4 p-4 border rounded-lg cursor-pointer transition-all ${paymentMethod === 'COD' ? 'border-[#B08D55] bg-orange-50/30 ring-1 ring-[#B08D55]/20' : 'border-gray-200 hover:border-gray-300'}`}>
                     <input type="radio" name="payment" value="COD" checked={paymentMethod === 'COD'} onChange={() => setPaymentMethod('COD')} className="accent-[#B08D55] w-5 h-5" />
                     <div className="flex-1">
@@ -218,7 +248,7 @@ const CheckoutPage = () => {
                 </div>
               </div>
 
-              {/* Mobile Pay Button (Sticky) */}
+              {/* Mobile Pay Button */}
               <div className="lg:hidden fixed bottom-0 left-0 w-full p-4 bg-white border-t border-gray-200 z-40 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
                  <button type="submit" disabled={isProcessing} className="w-full bg-black text-white py-4 rounded-md font-bold text-sm uppercase tracking-widest hover:bg-[#B08D55] transition-colors disabled:bg-gray-400 flex items-center justify-center gap-2">
                   {isProcessing ? <Loader2 className="animate-spin" size={18}/> : `Pay ₹${finalTotal.toLocaleString()}`}
@@ -231,23 +261,37 @@ const CheckoutPage = () => {
           <div className="w-full lg:w-[40%]">
             <div className="bg-white p-6 md:p-8 rounded-lg shadow-sm border border-gray-100 sticky top-24">
               <div className="mb-6">
-                <h2 className="font-serif text-xl font-bold text-gray-900">Order Summary</h2>
-                {/* Decorative underline matching Best Sellers */}
+                <h2 className="font-heading text-xl font-bold text-gray-900">Order Summary</h2>
                 <div className="w-16 h-1 bg-[#B08D55] rounded-full mt-2"></div>
               </div>
 
               <div className="space-y-5 mb-6 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                {cartItems.map((item) => (
+                {checkoutItems.map((item) => (
                   <div key={item.id} className="flex gap-4 group">
-                    <div className="w-16 h-20 bg-gray-100 rounded-md border border-gray-200 overflow-hidden relative flex-shrink-0">
-                      <img src={item.featuredImageUrl || item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                      <span className="absolute top-0 right-0 bg-gray-900 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-bl font-bold">{item.quantity}</span>
-                    </div>
+                    {/* CLICKABLE IMAGE LINK */}
+                    <Link to={`/product/${item.id}`} className="block w-16 h-20 flex-shrink-0">
+                      <div className="w-full h-full bg-gray-100 rounded-md border border-gray-200 overflow-hidden relative">
+                        <img src={item.featuredImageUrl || item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        <span className="absolute top-0 right-0 bg-gray-900 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-bl font-bold">{item.quantity}</span>
+                      </div>
+                    </Link>
+                    
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-bold text-gray-900 line-clamp-2 leading-tight">{item.name}</h4>
+                      <Link to={`/product/${item.id}`} className="hover:text-[#B08D55] transition-colors">
+                        <h4 className="text-sm font-bold text-gray-900 line-clamp-2 leading-tight">{item.name}</h4>
+                      </Link>
                       <p className="text-xs text-gray-500 mt-1">{item.variant || 'Standard'}</p>
+                      
+                      {/* SHOW ENERGIZATION TAG IF APPLICABLE */}
+                      {item.energization && (
+                        <span className="inline-flex items-center gap-1 mt-1 px-1.5 py-0.5 rounded bg-[#B08D55]/10 text-[#B08D55] text-[9px] font-bold uppercase">
+                          <CheckCircle2 size={10} /> Energized (+₹151)
+                        </span>
+                      )}
                     </div>
-                    <div className="text-sm font-bold text-gray-900 whitespace-nowrap">₹{((item.price || 0) * (item.quantity || 1)).toLocaleString()}</div>
+                    <div className="text-sm font-bold text-gray-900 whitespace-nowrap">
+                      ₹{((Number(item.price) * Number(item.quantity)) + (item.energization ? 151 : 0)).toLocaleString()}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -270,8 +314,8 @@ const CheckoutPage = () => {
               </div>
 
               <div className="flex justify-between items-center py-6 border-t border-gray-200 mb-6">
-                <span className="font-serif text-xl font-bold text-gray-900">Total</span>
-                <span className="font-serif text-2xl font-bold text-[#B08D55]">₹{finalTotal.toLocaleString()}</span>
+                <span className="font-heading text-xl font-bold text-gray-900">Total</span>
+                <span className="font-heading text-2xl font-bold text-[#B08D55]">₹{finalTotal.toLocaleString()}</span>
               </div>
 
               <button form="checkout-form" type="submit" disabled={isProcessing} className="hidden lg:flex w-full bg-black text-white py-4 rounded-md font-bold text-sm uppercase tracking-widest hover:bg-[#B08D55] transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 disabled:bg-gray-400 items-center justify-center gap-2">

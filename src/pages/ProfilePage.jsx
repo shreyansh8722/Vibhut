@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Package, MapPin, LogOut, LayoutDashboard, ChevronRight, Home, ArrowLeft } from 'lucide-react'; // Added Icons
+import { Package, MapPin, LogOut, LayoutDashboard, ChevronRight, Home, ArrowLeft } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth'; 
 
@@ -29,42 +29,40 @@ const ProfilePage = () => {
   const getInitials = (name) => name ? name.charAt(0).toUpperCase() : 'U';
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4 font-body">
+    <div className="min-h-screen bg-gray-50 py-8 px-4 font-sans">
       <div className="container mx-auto max-w-6xl">
         
-        {/* --- NEW: BREADCRUMBS NAVIGATION --- */}
+        {/* --- STANDARD BREADCRUMBS --- */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-           {/* Breadcrumb Trail: Home > Profile */}
-           <nav className="flex items-center gap-2 text-sm text-gray-500">
-              <Link to="/" className="flex items-center gap-1 hover:text-[var(--color-primary)] transition-colors">
-                <Home size={15} />
-                <span>Home</span>
-              </Link>
-              <ChevronRight size={14} />
-              <span className="font-bold text-black">My Account</span>
-           </nav>
+           
+           {/* Breadcrumb Path */}
+           <div className="flex items-center gap-2 text-[10px] font-bold text-gray-500 tracking-widest uppercase">
+              <Link to="/" className="hover:text-[#B08D55] transition-colors">Home</Link>
+              <ChevronRight size={10} />
+              <span className="text-gray-900">My Account</span>
+           </div>
 
-           {/* Explicit Back Button */}
+           {/* Back Button */}
            <button 
              onClick={() => navigate('/')} 
-             className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-gray-500 hover:text-black transition-colors"
+             className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-gray-500 hover:text-black transition-colors"
            >
-             <ArrowLeft size={16} /> Back to Home
+             <ArrowLeft size={12} /> Back to Store
            </button>
         </div>
 
         {/* Header */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-10 gap-4">
            <div>
-             <h1 className="font-heading text-3xl md:text-4xl font-bold text-black">My Account</h1>
+             <h1 className="font-serif text-3xl md:text-4xl font-bold text-gray-900">My Account</h1>
              <p className="text-gray-500 mt-2 text-sm">
-               Welcome back, <span className="text-black font-bold">{user.displayName || 'Devotee'}</span>
+               Welcome back, <span className="text-gray-900 font-bold">{user.displayName || 'Devotee'}</span>
              </p>
            </div>
            
            <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full border border-gray-200 shadow-sm">
               <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-              <span className="text-xs font-bold text-gray-600 uppercase tracking-wider">
+              <span className="text-[10px] font-bold text-gray-600 uppercase tracking-widest">
                 Member Since {new Date(user.metadata.creationTime).getFullYear()}
               </span>
            </div>
@@ -78,10 +76,10 @@ const ProfilePage = () => {
                  
                  {/* User Info */}
                  <div className="p-6 border-b border-gray-100 bg-gray-50/50">
-                    <div className="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center font-heading font-bold text-xl mb-3">
+                    <div className="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center font-serif font-bold text-xl mb-3">
                        {getInitials(user.displayName)}
                     </div>
-                    <div className="text-sm font-bold text-black">{user.displayName || 'User'}</div>
+                    <div className="text-sm font-bold text-gray-900">{user.displayName || 'User'}</div>
                     <div className="text-xs text-gray-500 truncate" title={user.email}>{user.email}</div>
                  </div>
 
@@ -89,39 +87,39 @@ const ProfilePage = () => {
                  <nav className="p-2 space-y-1">
                    <button 
                      onClick={() => setActiveTab('orders')}
-                     className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-sm font-bold uppercase tracking-wide transition-all ${
+                     className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-xs font-bold uppercase tracking-wider transition-all ${
                        activeTab === 'orders' ? 'bg-black text-white shadow-md' : 'text-gray-500 hover:bg-gray-50 hover:text-black'
                      }`}
                    >
-                      <Package size={18} /> Order History
+                      <Package size={16} /> Order History
                    </button>
                    
                    <button 
                      onClick={() => setActiveTab('addresses')}
-                     className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-sm font-bold uppercase tracking-wide transition-all ${
+                     className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-xs font-bold uppercase tracking-wider transition-all ${
                        activeTab === 'addresses' ? 'bg-black text-white shadow-md' : 'text-gray-500 hover:bg-gray-50 hover:text-black'
                      }`}
                    >
-                      <MapPin size={18} /> Addresses
+                      <MapPin size={16} /> Addresses
                    </button>
 
                    <div className="my-2 border-t border-gray-100"></div>
 
-                   {/* --- ADMIN BUTTON (Only if role is admin) --- */}
+                   {/* Admin Button */}
                    {user.role === 'admin' && (
                      <button 
                        onClick={() => navigate('/admin')}
-                       className="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-sm font-bold uppercase tracking-wide text-black hover:bg-gray-100 transition-colors mb-1"
+                       className="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-xs font-bold uppercase tracking-wider text-black hover:bg-gray-100 transition-colors mb-1"
                      >
-                        <LayoutDashboard size={18} /> Admin Dashboard
+                        <LayoutDashboard size={16} /> Admin Dashboard
                      </button>
                    )}
 
                    <button 
                      onClick={handleLogout}
-                     className="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-sm font-bold uppercase tracking-wide text-red-500 hover:bg-red-50 transition-colors"
+                     className="w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 text-xs font-bold uppercase tracking-wider text-red-500 hover:bg-red-50 transition-colors"
                    >
-                      <LogOut size={18} /> Logout
+                      <LogOut size={16} /> Logout
                    </button>
                  </nav>
               </div>
@@ -133,12 +131,12 @@ const ProfilePage = () => {
               {/* Orders Tab */}
               {activeTab === 'orders' && (
                  <div className="space-y-6 animate-fade-in">
-                    <h2 className="font-heading text-2xl font-bold mb-6">Recent Orders</h2>
+                    <h2 className="font-serif text-2xl font-bold mb-6 text-gray-900">Recent Orders</h2>
                     <div className="text-center py-20 bg-white rounded-xl border border-dashed border-gray-300">
                         <Package size={48} className="mx-auto text-gray-300 mb-4" />
                         <h3 className="text-lg font-bold text-gray-900">No orders yet</h3>
                         <p className="text-gray-500 text-sm mb-6">Your spiritual journey begins with your first step.</p>
-                        <button onClick={() => navigate('/shop')} className="px-6 py-2 bg-black text-white text-xs font-bold uppercase rounded hover:bg-[var(--color-primary)] transition-colors">
+                        <button onClick={() => navigate('/shop')} className="px-6 py-3 bg-black text-white text-xs font-bold uppercase tracking-widest rounded hover:bg-[#B08D55] transition-colors">
                            Start Shopping
                         </button>
                     </div>
@@ -149,8 +147,8 @@ const ProfilePage = () => {
               {activeTab === 'addresses' && (
                  <div className="space-y-6 animate-fade-in">
                     <div className="flex justify-between items-end mb-6">
-                       <h2 className="font-heading text-2xl font-bold">Saved Addresses</h2>
-                       <button className="text-xs font-bold text-[var(--color-primary)] uppercase hover:underline">
+                       <h2 className="font-serif text-2xl font-bold text-gray-900">Saved Addresses</h2>
+                       <button className="text-xs font-bold text-[#B08D55] uppercase tracking-widest hover:underline">
                          + Add New
                        </button>
                     </div>

@@ -1,9 +1,7 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 
-// Create context
 export const CartContext = createContext();
 
-// Custom hook to use the cart context
 export const useCart = () => {
   const context = useContext(CartContext);
   if (!context) {
@@ -12,9 +10,7 @@ export const useCart = () => {
   return context;
 };
 
-// Provider component
 export const CartProvider = ({ children }) => {
-  // Initialize cart from localStorage
   const [cartItems, setCartItems] = useState(() => {
     try {
       const savedCart = localStorage.getItem('cartItems');
@@ -27,7 +23,6 @@ export const CartProvider = ({ children }) => {
 
   const [isCartOpen, setIsCartOpen] = useState(false);
 
-  // Sync to localStorage
   useEffect(() => {
     try {
       localStorage.setItem('cartItems', JSON.stringify(cartItems));
@@ -36,8 +31,8 @@ export const CartProvider = ({ children }) => {
     }
   }, [cartItems]);
 
-  // Add item
-  const addToCart = (product, size, quantity = 1) => {
+  // FIX: Added 'extras' and 'openDrawer' parameters
+  const addToCart = (product, size, quantity = 1, extras = null, openDrawer = true) => {
     setCartItems(prevItems => {
       const existingItemIndex = prevItems.findIndex(
         item => item.id === product.id && item.selectedSize === size
@@ -46,22 +41,28 @@ export const CartProvider = ({ children }) => {
       if (existingItemIndex > -1) {
         const newItems = [...prevItems];
         newItems[existingItemIndex].quantity += quantity;
+        // Merge new extras if provided
+        if (extras) {
+          newItems[existingItemIndex] = { ...newItems[existingItemIndex], ...extras };
+        }
         return newItems;
       } else {
-        return [...prevItems, { ...product, selectedSize: size, quantity }];
+        return [...prevItems, { ...product, selectedSize: size, quantity, ...extras }];
       }
     });
-    setIsCartOpen(true);
+
+    // FIX: Only open drawer if flag is true
+    if (openDrawer) {
+      setIsCartOpen(true);
+    }
   };
 
-  // Remove item
   const removeFromCart = (productId, size) => {
     setCartItems(prevItems => 
       prevItems.filter(item => !(item.id === productId && item.selectedSize === size))
     );
   };
 
-  // Update quantity
   const updateQuantity = (productId, size, newQuantity) => {
     if (newQuantity < 1) return;
     setCartItems(prevItems =>

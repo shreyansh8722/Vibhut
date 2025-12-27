@@ -1,5 +1,6 @@
 import React from 'react';
-import { Phone, MessageCircle, Star, Filter, Calendar } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Phone, MessageCircle, Star, Filter, ChevronRight } from 'lucide-react';
 
 const experts = [
   { id: 1, name: "Pt. Ram Krishna", skill: "Vedic, Vastu", lang: "Hindi, Eng", exp: "15 Yr", rating: 4.9, price: 500, status: "online", img: "https://randomuser.me/api/portraits/men/32.jpg" },
@@ -12,30 +13,37 @@ const experts = [
 
 const ConsultPage = () => {
   return (
-    <div className="bg-gray-50 min-h-screen pb-20 pt-8">
+    <div className="bg-gray-50 min-h-screen pb-20 pt-6 font-sans">
       <div className="container mx-auto px-4">
         
+        {/* STANDARD BREADCRUMBS */}
+        <div className="flex items-center justify-center gap-2 text-[10px] font-bold text-gray-500 tracking-widest uppercase mb-8">
+           <Link to="/" className="hover:text-[#B08D55] transition-colors">Home</Link> 
+           <ChevronRight size={10} />
+           <span className="text-gray-900">Consult</span>
+        </div>
+
         {/* Page Header */}
         <div className="text-center mb-10">
-          <span className="text-[var(--color-primary)] font-bold tracking-[0.2em] uppercase text-xs block mb-3">
+          <span className="text-[#B08D55] font-bold tracking-[0.2em] uppercase text-[10px] block mb-3">
             Divine Guidance
           </span>
-          <h1 className="font-heading text-4xl md:text-5xl font-bold text-black mb-4">
+          <h1 className="font-serif text-4xl md:text-5xl font-bold text-gray-900 mb-4">
             Consult Vedic Experts
           </h1>
-          <p className="text-gray-500 max-w-2xl mx-auto">
+          <p className="text-gray-500 max-w-2xl mx-auto text-sm">
             Get instant clarity on your Career, Marriage, Health, and Finance from verified astrologers of Kashi.
           </p>
         </div>
 
         {/* Filters Bar */}
         <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-8 flex flex-wrap gap-4 items-center justify-between sticky top-20 z-30">
-           <div className="flex items-center gap-2 text-sm font-bold text-gray-700">
-              <Filter size={16} /> Filters:
+           <div className="flex items-center gap-2 text-xs font-bold text-gray-700 uppercase tracking-wide">
+              <Filter size={14} /> Filters:
            </div>
            <div className="flex gap-2 overflow-x-auto pb-1 md:pb-0 scrollbar-hide">
               {['All', 'Vedic', 'Tarot', 'Numerology', 'Vastu'].map(filter => (
-                 <button key={filter} className="px-4 py-1.5 rounded-full border border-gray-200 text-xs font-bold uppercase hover:bg-black hover:text-white transition-colors whitespace-nowrap">
+                 <button key={filter} className="px-4 py-1.5 rounded-full border border-gray-200 text-[10px] font-bold uppercase hover:bg-black hover:text-white hover:border-black transition-all whitespace-nowrap">
                     {filter}
                  </button>
               ))}
@@ -49,36 +57,39 @@ const ConsultPage = () => {
                <div className="flex gap-4">
                   {/* Image */}
                   <div className="relative">
-                     <img src={astro.img} alt={astro.name} className="w-20 h-20 rounded-full object-cover border-2 border-gray-100" />
-                     <div className={`absolute bottom-0 right-1 w-4 h-4 border-2 border-white rounded-full ${astro.status === 'online' ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                     <img src={astro.img} alt={astro.name} className="w-16 h-16 rounded-full object-cover border-2 border-gray-100 group-hover:border-[#B08D55] transition-colors" />
+                     <div className={`absolute bottom-0 right-0 w-3 h-3 border-2 border-white rounded-full ${astro.status === 'online' ? 'bg-green-500' : 'bg-gray-400'}`}></div>
                   </div>
                   
                   {/* Details */}
                   <div className="flex-1">
                      <div className="flex justify-between items-start">
-                        <h3 className="font-heading font-bold text-lg text-black">{astro.name}</h3>
-                        <div className="flex items-center gap-1 text-[10px] font-bold bg-yellow-50 text-yellow-700 px-1.5 py-0.5 rounded">
+                        <h3 className="font-serif font-bold text-lg text-gray-900">{astro.name}</h3>
+                        <div className="flex items-center gap-1 text-[10px] font-bold bg-yellow-50 text-yellow-700 px-1.5 py-0.5 rounded border border-yellow-100">
                            {astro.rating} <Star size={10} className="fill-current" />
                         </div>
                      </div>
-                     <p className="text-xs text-gray-500 mt-1 mb-2">{astro.skill}</p>
-                     <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">{astro.lang}</p>
-                     <p className="text-[10px] text-gray-400 font-bold mt-1">{astro.exp} Experience</p>
+                     <p className="text-xs text-gray-500 mt-1 mb-2 font-medium">{astro.skill}</p>
+                     <div className="flex gap-2 text-[9px] text-gray-400 uppercase font-bold tracking-wider">
+                        <span>{astro.lang}</span>
+                        <span>•</span>
+                        <span>{astro.exp} Exp</span>
+                     </div>
                   </div>
                </div>
 
                {/* Price & Actions */}
                <div className="mt-6 pt-4 border-t border-gray-50 flex items-center justify-between gap-4">
                   <div className="text-left">
-                     <span className="text-[10px] text-gray-400 font-bold uppercase block">Rate / min</span>
-                     <span className="text-lg font-bold text-black">₹{astro.price}</span>
+                     <span className="text-[9px] text-gray-400 font-bold uppercase block tracking-wider">Rate / min</span>
+                     <span className="text-lg font-bold text-gray-900">₹{astro.price}</span>
                   </div>
                   <div className="flex gap-2">
-                     <button className="px-4 py-2 border border-[var(--color-primary)] text-[var(--color-primary)] rounded-lg text-xs font-bold uppercase hover:bg-[var(--color-primary)] hover:text-white transition-colors flex items-center gap-2">
-                        <MessageCircle size={16} /> Chat
+                     <button className="px-3 py-2 border border-[#B08D55] text-[#B08D55] rounded-md text-[10px] font-bold uppercase hover:bg-[#B08D55] hover:text-white transition-colors flex items-center gap-2 tracking-wide">
+                        <MessageCircle size={14} /> Chat
                      </button>
-                     <button className="px-4 py-2 bg-black text-white rounded-lg text-xs font-bold uppercase hover:bg-gray-800 transition-colors flex items-center gap-2">
-                        <Phone size={16} /> Call
+                     <button className="px-3 py-2 bg-black text-white rounded-md text-[10px] font-bold uppercase hover:bg-gray-800 transition-colors flex items-center gap-2 tracking-wide">
+                        <Phone size={14} /> Call
                      </button>
                   </div>
                </div>
