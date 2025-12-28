@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { 
   Star, ChevronRight, Loader2, Truck, CheckCircle2, 
-  Ticket, ChevronDown, Eye, Package, Info, ArrowRight, AlertTriangle, Gift
+  Ticket, ChevronDown, Eye, Package, Info, ArrowRight, AlertTriangle, Minus, Plus,
+  Phone, ShieldCheck
 } from 'lucide-react';
 import { doc, getDoc, collection, getDocs, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '../lib/firebase';
@@ -11,10 +12,17 @@ import { useProducts } from '../context/ProductContext';
 import ProductGallery from '../components/shop/ProductGallery';
 import { ProductReviews } from '../components/shop/ProductReviews'; 
 
+// WhatsApp Icon SVG Component
+const WhatsAppIcon = ({ size = 18 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+    <path d="M17.472 14.382C17.119 14.205 15.42 13.382 15.101 13.273C14.786 13.161 14.557 13.107 14.328 13.447C14.099 13.789 13.447 14.538 13.247 14.767C13.05 14.993 12.85 15.024 12.496 14.848C12.143 14.672 10.993 14.295 9.638 13.088C8.563 12.13 7.842 10.953 7.632 10.59C7.42 10.224 7.608 10.034 7.785 9.858C7.943 9.702 8.139 9.453 8.312 9.255C8.484 9.057 8.541 8.887 8.655 8.659C8.77 8.431 8.712 8.232 8.627 8.062C8.541 7.892 7.857 6.206 7.571 5.526C7.294 4.866 7.013 4.957 6.812 4.965C6.626 4.973 6.411 4.975 6.196 4.975C5.981 4.975 5.637 5.055 5.351 5.367C5.065 5.679 4.251 6.444 4.251 8.003C4.251 9.563 5.381 11.066 5.542 11.278C5.7 11.492 7.788 14.881 11.083 16.147C13.84 17.206 14.415 16.995 15.006 16.94C15.659 16.879 17.011 16.158 17.293 15.364C17.575 14.57 17.575 13.889 17.472 14.382Z" />
+    <path fillRule="evenodd" clipRule="evenodd" d="M12.008 24C18.636 24 24.008 18.627 24.008 12C24.008 5.372 18.636 0 12.008 0C5.38 0 0.00800002 5.372 0.00800002 12C0.00800002 14.28 0.65000004 16.397 1.776 18.2L0.60300004 22.845L5.354 21.685C7.307 23.141 9.578 24 12.008 24ZM12.008 21.821C9.919 21.821 7.962 21.143 6.368 19.972L5.975 19.684L2.946 20.423L3.719 17.408L3.399 16.918C2.107 14.939 1.417 12.593 1.417 10.179C1.417 4.549 6.171 0 12.008 0C17.845 0 22.599 4.549 22.599 10.179C22.599 15.809 17.845 20.358 12.008 20.358V21.821Z" />
+  </svg>
+);
+
 const ProductDetailsPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { addToCart } = useCart();
   
   // 1. Static Data
   const { products, loading: staticLoading } = useProducts();
@@ -54,11 +62,12 @@ const ProductDetailsPage = () => {
 
   const galleryImages = product ? (product.imageUrls || [product.featuredImageUrl]) : [];
 
-  const combos = [
-    { qty: 1, label: "Single", discount: 0 },
-    { qty: 2, label: "Pair (2) (Save 10%)", discount: 10 },
-    { qty: 3, label: "Family (3) (Save 15%)", discount: 15 }
-  ];
+  // --- Dynamic Discount Logic ---
+  const getDiscountPercent = (qty) => {
+    if (qty >= 3) return 15;
+    if (qty === 2) return 10; 
+    return 0;
+  };
 
   // 3. FETCH LIVE REVIEWS
   useEffect(() => {
@@ -69,10 +78,9 @@ const ProductDetailsPage = () => {
       const fetchedReviews = snapshot.docs.map(doc => doc.data());
       setReviews(fetchedReviews);
       
-      // Calculate Average
       if (fetchedReviews.length > 0) {
         const total = fetchedReviews.reduce((acc, curr) => acc + (Number(curr.rating) || 0), 0);
-        setAverageRating(Math.round((total / fetchedReviews.length) * 10) / 10); // 1 decimal place
+        setAverageRating(Math.round((total / fetchedReviews.length) * 10) / 10); 
       } else {
         setAverageRating(0);
       }
@@ -91,9 +99,10 @@ const ProductDetailsPage = () => {
         const docRef = doc(db, "products", id);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
-          setRealStock(docSnap.data().stock || 0);
+          const data = docSnap.data();
+          setRealStock(data.stock !== undefined ? data.stock : product?.stock || 50);
         } else {
-          setRealStock(0);
+          setRealStock(product?.stock || 50);
         }
 
         // Coupons
@@ -105,7 +114,7 @@ const ProductDetailsPage = () => {
 
       } catch (error) {
         console.error("Live data fetch failed:", error);
-        setRealStock(product?.stock || 0);
+        setRealStock(product?.stock || 50);
       } finally {
         setIsStockLoading(false);
       }
@@ -142,13 +151,15 @@ const ProductDetailsPage = () => {
   if (staticLoading) return <div className="h-screen flex items-center justify-center bg-white"><Loader2 className="animate-spin text-[#B08D55]" size={40} /></div>;
   if (!product) return <div className="h-[60vh] flex flex-col items-center justify-center gap-4 bg-white"><h2 className="text-2xl font-heading text-gray-900">Artifact not found</h2><button onClick={() => navigate('/shop')} className="text-[#B08D55] underline">Return to shop</button></div>;
 
+  // --- Price Calculations ---
   const basePrice = Number(product.price);
   const comparePrice = Number(product.comparePrice);
-  const selectedCombo = combos.find(c => c.qty === quantity) || combos[0];
-  const comboPricePerUnit = basePrice - (basePrice * (selectedCombo.discount / 100));
-  const totalPrice = (comboPricePerUnit * quantity) + (addEnergization ? ENERGIZATION_COST : 0);
+  
+  const discountPercent = getDiscountPercent(quantity);
+  const pricePerUnit = basePrice - (basePrice * (discountPercent / 100));
+  const totalPrice = (pricePerUnit * quantity) + (addEnergization ? ENERGIZATION_COST : 0);
 
-  const isOutOfStock = !isStockLoading && (realStock === 0 || realStock < quantity);
+  const isOutOfStock = !isStockLoading && realStock !== null && realStock < quantity;
   const isLowStock = !isStockLoading && realStock > 0 && realStock < 5;
 
   const handleCopyCoupon = (code) => {
@@ -161,13 +172,26 @@ const ProductDetailsPage = () => {
     setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
   };
 
+  const incrementQty = () => {
+    if (isStockLoading) return;
+    if (realStock !== null && quantity >= realStock) {
+      alert(`Only ${realStock} units available in stock.`);
+      return; 
+    }
+    setQuantity(prev => prev + 1);
+  };
+  
+  const decrementQty = () => {
+    if (quantity > 1) setQuantity(prev => prev - 1);
+  };
+
   const handleDirectOrder = (paymentMode) => {
     const directItem = {
       id: product.id,
       name: product.name,
-      price: comboPricePerUnit,
+      price: pricePerUnit,
       quantity: quantity,
-      variant: selectedCombo.label,
+      variant: quantity === 1 ? 'Single' : `Bundle (${quantity})`,
       image: galleryImages[0],
       energization: addEnergization,
       energizationDetails: addEnergization ? { name: devoteeName } : null
@@ -195,16 +219,20 @@ const ProductDetailsPage = () => {
   return (
     <>
       <style>{`
-        @keyframes shine { 0% { transform: translateX(-100%); } 20% { transform: translateX(100%); } 100% { transform: translateX(100%); } }
-        .animate-shine { animation: shine 3s infinite linear; }
+        @keyframes shine { 
+          0% { transform: translateX(-100%); } 
+          100% { transform: translateX(100%); } 
+        }
+        .animate-shine { animation: shine 1.5s infinite linear; }
+        
         @keyframes gold-pulse { 0% { box-shadow: 0 0 0 0 rgba(176, 141, 85, 0.4); } 70% { box-shadow: 0 0 0 6px rgba(176, 141, 85, 0); } 100% { box-shadow: 0 0 0 0 rgba(176, 141, 85, 0); } }
         .animate-gold-pulse { animation: gold-pulse 2s infinite; }
       `}</style>
 
       <div className="bg-white min-h-screen pb-32 font-body text-gray-900 relative">
         
-        {/* Breadcrumbs */}
-        <div className="bg-white border-b border-gray-100 sticky top-0 z-40">
+        {/* Breadcrumbs - Hidden on Mobile, Visible on Desktop */}
+        <div className="hidden md:block bg-white border-b border-gray-100 sticky top-0 z-40">
           <div className="container mx-auto px-4 py-3">
             <div className="flex items-center gap-2 text-[10px] font-bold text-gray-500 tracking-widest uppercase">
               <Link to="/" className="hover:text-[#B08D55]">Home</Link> <ChevronRight size={10} />
@@ -214,8 +242,11 @@ const ProductDetailsPage = () => {
           </div>
         </div>
 
-        <div className="container mx-auto px-4 md:px-8 pt-6">
-          <div className="flex flex-col lg:flex-row gap-10">
+        {/* Main Content */}
+        <div className="container mx-auto px-4 md:px-8 pt-0 md:pt-6">
+          
+          {/* UPDATED: Gap-0 for Mobile to remove white space */}
+          <div className="flex flex-col lg:flex-row gap-0 lg:gap-10">
             
             {/* Gallery */}
             <div className="w-full lg:w-[58%]">
@@ -223,19 +254,19 @@ const ProductDetailsPage = () => {
             </div>
 
             {/* Buy Box */}
-            <div className="w-full lg:w-[42%]">
+            <div className="w-full lg:w-[42%] mt-3 lg:mt-0">
               
-              <div className="mb-6 border-b border-gray-100 pb-6">
+              {/* Header */}
+              <div className="mb-2 border-b border-gray-100 pb-2">
                   <div className="flex items-center gap-2 mb-2">
                      <span className="bg-[#B08D55]/10 text-[#B08D55] text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">Best Seller</span>
                      <div className="flex items-center gap-1 text-[11px] text-gray-500"><Eye size={12} /> {viewCount} people viewing</div>
                   </div>
-                  <h1 className="font-heading text-3xl md:text-4xl font-bold text-gray-900 mb-3 leading-tight">{product.name}</h1>
+                  {/* UPDATED: Smaller font on mobile (text-2xl) */}
+                  <h1 className="font-heading text-2xl md:text-4xl font-bold text-gray-900 mb-2 leading-tight">{product.name}</h1>
                   
-                  {/* DYNAMIC RATINGS FROM DATABASE */}
                   <div className="flex items-center gap-4">
                      <div className="flex items-center gap-1 text-[#B08D55]">
-                        {/* Show Stars based on Average Rating */}
                         {[1,2,3,4,5].map(i => (
                           <Star 
                             key={i} 
@@ -253,21 +284,21 @@ const ProductDetailsPage = () => {
               </div>
 
               {/* Price */}
-              <div className="mb-6">
+              <div className="mb-3">
                  <div className="flex items-end gap-3 mb-1">
                     <span className="text-4xl font-heading font-bold text-gray-900">₹{totalPrice.toLocaleString()}</span>
                     {comparePrice > 0 && <span className="text-lg text-gray-400 line-through mb-1.5 font-light">₹{(comparePrice * quantity).toLocaleString()}</span>}
-                    {comparePrice > 0 && <span className="text-xs font-bold text-white bg-red-600 px-2 py-1 rounded mb-2">-{Math.round(((comparePrice - comboPricePerUnit) / comparePrice) * 100)}%</span>}
+                    {comparePrice > 0 && <span className="text-xs font-bold text-white bg-red-600 px-2 py-1 rounded mb-2">-{Math.round(((comparePrice - pricePerUnit) / comparePrice) * 100)}%</span>}
                  </div>
                  
                  {isLowStock && (
-                    <div className="text-xs font-bold text-red-600 flex items-center gap-1.5 animate-pulse mt-2">
+                    <div className="text-xs font-bold text-red-600 flex items-center gap-1.5 animate-pulse mt-1">
                         <AlertTriangle size={14} className="fill-red-100" />
                         Hurry! Only {realStock} units left in stock.
                     </div>
                  )}
 
-                 <p className="text-xs text-gray-500 flex items-center gap-1.5 mt-2">
+                 <p className="text-xs text-gray-500 flex items-center gap-1.5 mt-1">
                     <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                     Order within <span className="text-gray-900 font-bold">{orderTimer.m}m {orderTimer.s}s</span> for dispatch today.
                  </p>
@@ -275,12 +306,12 @@ const ProductDetailsPage = () => {
 
               {/* Live Coupons */}
               {coupons.length > 0 && (
-                <div className="mb-8 bg-[#B08D55]/5 rounded-lg p-4 border border-dashed border-[#B08D55]/30">
-                   <div className="flex flex-col gap-3">
+                <div className="mb-3 bg-[#B08D55]/5 rounded-lg p-3 border border-dashed border-[#B08D55]/30">
+                   <div className="flex flex-col gap-2">
                        {coupons.slice(0, 2).map((coupon, idx) => (
                          <div key={idx} className="flex justify-between items-center">
-                             <div className="flex items-center gap-3">
-                                <Ticket size={16} className="text-[#B08D55]" />
+                             <div className="flex items-center gap-2">
+                                <Ticket size={14} className="text-[#B08D55]" />
                                 <div>
                                   <p className="text-xs font-bold text-gray-900 uppercase tracking-wide">{coupon.description || `Get ${coupon.discountAmount}% Off`}</p>
                                   <p className="text-[10px] text-gray-500">Use code <span className="font-bold">{coupon.code}</span></p>
@@ -295,28 +326,47 @@ const ProductDetailsPage = () => {
                 </div>
               )}
 
-              {/* Pack Selection */}
-              <div className="mb-8">
-                 <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3 block">Select Pack</span>
-                 <div className="space-y-3">
-                    {combos.map((combo) => (
-                      <div key={combo.qty} onClick={() => setQuantity(combo.qty)}
-                        className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all ${quantity === combo.qty ? 'border-[#B08D55] bg-[#B08D55]/5 ring-1 ring-[#B08D55]' : 'border-gray-200 hover:border-gray-300'}`}>
-                         <div className="flex items-center gap-3">
-                            <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${quantity === combo.qty ? 'border-[#B08D55]' : 'border-gray-300'}`}>
-                               {quantity === combo.qty && <div className="w-2 h-2 rounded-full bg-[#B08D55]" />}
-                            </div>
-                            <span className={`text-sm ${quantity === combo.qty ? 'font-bold text-gray-900' : 'text-gray-600'}`}>{combo.label}</span>
-                         </div>
-                         <span className="font-heading font-bold text-gray-900">₹{(comboPricePerUnit * combo.qty).toLocaleString()}</span>
-                      </div>
-                    ))}
-                 </div>
+              {/* Quantity Selector */}
+              <div className="mb-4">
+                <div className="flex justify-between items-center mb-2">
+                   <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Quantity</span>
+                   <span className="text-[11px] font-bold text-[#B08D55] animate-pulse">
+                     {quantity === 1 ? "Buy 2 to Save 10%" : quantity === 2 ? "Add 1 more to Save 15%" : "🎉 Max Discount Applied!"}
+                   </span>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden h-10 w-32">
+                    <button 
+                      onClick={decrementQty}
+                      className="w-10 h-full flex items-center justify-center bg-gray-50 hover:bg-gray-100 border-r border-gray-300 transition-colors"
+                    >
+                      <Minus size={16} />
+                    </button>
+                    <div className="flex-1 h-full flex items-center justify-center font-bold text-gray-900 text-base">
+                      {quantity}
+                    </div>
+                    <button 
+                      onClick={incrementQty}
+                      disabled={isOutOfStock}
+                      className="w-10 h-full flex items-center justify-center bg-gray-50 hover:bg-gray-100 border-l border-gray-300 transition-colors disabled:opacity-50"
+                    >
+                      <Plus size={16} />
+                    </button>
+                  </div>
+                  
+                  {discountPercent > 0 && (
+                    <div className="h-10 px-3 rounded-lg bg-green-100 text-green-800 flex flex-col justify-center border border-green-200">
+                      <span className="text-[9px] uppercase font-bold tracking-wider">You Save</span>
+                      <span className="text-xs font-bold">{discountPercent}% OFF</span>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Energization */}
-              <div className={`mb-8 border rounded-lg overflow-hidden transition-all duration-300 ${addEnergization ? 'border-[#B08D55] bg-white ring-1 ring-[#B08D55] shadow-lg' : 'border-gray-200 bg-gray-50 hover:border-gray-300'}`}>
-                 <div onClick={() => setAddEnergization(!addEnergization)} className="p-4 cursor-pointer flex items-center justify-between group relative overflow-hidden">
+              <div className={`mb-6 border rounded-lg overflow-hidden transition-all duration-300 ${addEnergization ? 'border-[#B08D55] bg-white ring-1 ring-[#B08D55] shadow-lg' : 'border-gray-200 bg-gray-50 hover:border-gray-300'}`}>
+                 <div onClick={() => setAddEnergization(!addEnergization)} className="p-3 cursor-pointer flex items-center justify-between group relative overflow-hidden">
                     <div className="flex items-center gap-3 relative z-10">
                        <div className={`w-5 h-5 rounded flex items-center justify-center transition-all ${addEnergization ? 'bg-[#B08D55] text-white scale-110' : 'border border-gray-400 bg-white animate-gold-pulse'}`}>
                           {addEnergization ? <CheckCircle2 size={14} /> : <div className="w-2 h-2 rounded-full bg-[#B08D55]/30"></div>}
@@ -332,9 +382,9 @@ const ProductDetailsPage = () => {
                     {addEnergization && <div className="absolute inset-0 bg-[#B08D55]/5 z-0"></div>}
                  </div>
                  {addEnergization && (
-                   <div className="px-4 pb-4 pt-0 animate-fade-in bg-white/50">
+                   <div className="px-3 pb-3 pt-0 animate-fade-in bg-white/50">
                       <input type="text" placeholder="Enter Name for Sankalp (e.g. Rahul Sharma)" 
-                        className="w-full text-sm p-3 border border-gray-200 rounded-md focus:border-[#B08D55] outline-none bg-white mt-3"
+                        className="w-full text-sm p-2.5 border border-gray-200 rounded-md focus:border-[#B08D55] outline-none bg-white mt-2"
                         value={devoteeName} onChange={(e) => setDevoteeName(e.target.value)}
                       />
                    </div>
@@ -342,22 +392,22 @@ const ProductDetailsPage = () => {
               </div>
 
               {/* Main Actions */}
-              <div ref={mainActionsRef} className="flex flex-col gap-3 mb-8">
+              <div ref={mainActionsRef} className="flex flex-col gap-3 mb-6">
                  <button 
                     onClick={() => handleDirectOrder('ONLINE')}
-                    disabled={isOutOfStock || isStockLoading}
+                    disabled={isOutOfStock}
                     className={`w-full py-4 rounded-lg shadow-lg flex items-center justify-center gap-3 group relative overflow-hidden transition-all 
-                    ${(isOutOfStock || isStockLoading) 
+                    ${isOutOfStock 
                         ? 'bg-gray-300 cursor-not-allowed text-gray-500' 
                         : 'bg-gray-900 text-white hover:bg-[#B08D55] hover:shadow-xl hover:-translate-y-0.5'}`}
                  >
-                    {isStockLoading ? (
-                      <span className="font-bold text-sm uppercase tracking-widest flex items-center gap-2"><Loader2 className="animate-spin" size={16}/> Checking Stock...</span>
-                    ) : isOutOfStock ? (
+                    {isOutOfStock ? (
                       <span className="font-bold text-sm uppercase tracking-widest">Out of Stock</span>
                     ) : (
                       <>
-                        <div className="absolute inset-0 w-full h-full"><div className="absolute top-0 left-0 w-1/2 h-full bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-[-20deg] animate-shine"></div></div>
+                        <div className="absolute inset-0 w-full h-full overflow-hidden">
+                           <div className="absolute top-0 left-0 w-1/2 h-full bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-[-20deg] animate-shine"></div>
+                        </div>
                         <div className="flex flex-col items-center leading-none relative z-20">
                            <span className="font-bold text-sm uppercase tracking-widest flex items-center gap-2 text-yellow-50">Pay Online <ArrowRight size={16} /></span>
                            <span className="text-[10px] text-white/80 mt-1 font-medium group-hover:text-white transition-colors">Get Extra 5% OFF • Fast Dispatch</span>
@@ -368,16 +418,39 @@ const ProductDetailsPage = () => {
 
                  <button 
                     onClick={() => handleDirectOrder('COD')}
-                    disabled={isOutOfStock || isStockLoading}
+                    disabled={isOutOfStock}
                     className={`w-full py-3.5 border font-bold text-xs uppercase tracking-widest rounded-lg transition-all 
-                    ${(isOutOfStock || isStockLoading) ? 'border-gray-200 text-gray-400 cursor-not-allowed' : 'bg-white border-gray-300 text-gray-900 hover:border-black'}`}
+                    ${isOutOfStock ? 'border-gray-200 text-gray-400 cursor-not-allowed' : 'bg-white border-gray-300 text-gray-900 hover:border-black'}`}
                  >
                     Cash on Delivery
                  </button>
               </div>
 
+              {/* Need Help Section */}
+              <div className="mb-6 grid grid-cols-2 gap-3">
+                 <a href="https://wa.me/919876543210" target="_blank" rel="noopener noreferrer" 
+                    className="flex items-center justify-center gap-2 py-3 bg-green-50 text-green-700 border border-green-200 rounded-lg hover:bg-green-100 transition-colors">
+                    <WhatsAppIcon size={18} />
+                    <span className="text-xs font-bold uppercase">Order on WhatsApp</span>
+                 </a>
+                 <a href="tel:+919876543210" 
+                    className="flex items-center justify-center gap-2 py-3 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors">
+                    <Phone size={18} />
+                    <span className="text-xs font-bold uppercase">Call Expert</span>
+                 </a>
+              </div>
+
+              {/* Trust Strip */}
+              <div className="flex items-center justify-center gap-4 text-[10px] text-gray-500 font-medium mb-6 py-3 border-t border-b border-gray-100">
+                 <span className="flex items-center gap-1"><ShieldCheck size={12} /> 100% Authentic</span>
+                 <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
+                 <span className="flex items-center gap-1"><Truck size={12} /> Fast Shipping</span>
+                 <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
+                 <span className="flex items-center gap-1">🔒 Secure Payment</span>
+              </div>
+
               {/* Delivery Check */}
-              <div className="mb-8 pt-6 border-t border-gray-100">
+              <div className="mb-8">
                  <div className="flex gap-2">
                     <div className="relative flex-1">
                         <Truck size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -399,9 +472,22 @@ const ProductDetailsPage = () => {
                             <span className="text-xs font-bold uppercase tracking-widest text-gray-900 flex items-center gap-2">{key === 'product' ? <Info size={16} /> : <Package size={16} />} {section}</span>
                             <ChevronDown size={14} className={`transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
                          </button>
-                         <div className={`overflow-hidden transition-[max-height] duration-500 ease-in-out ${isOpen ? 'max-h-[500px]' : 'max-h-0'}`}>
+                         <div className={`overflow-hidden transition-[max-height] duration-500 ease-in-out ${isOpen ? 'max-h-[800px]' : 'max-h-0'}`}>
                             <div className="pb-6 text-sm text-gray-600 leading-relaxed px-1">
-                               {key === 'product' ? <p>{product.description || "Authentic spiritual artifact sourced from Kashi."}</p> : <p>• Dispatch: Within 24 hours.<br/>• Returns: 7-Day no-questions-asked.</p>}
+                               {key === 'product' ? (
+                                 <>
+                                   <p>{product.description || "Authentic spiritual artifact sourced from Kashi."}</p>
+                                   {product.detailImageUrls && product.detailImageUrls.length > 0 && (
+                                     <div className="mt-6 flex flex-col gap-4">
+                                        {product.detailImageUrls.map((url, imgIdx) => (
+                                          <img key={imgIdx} src={url} alt={`Detail ${imgIdx + 1}`} className="w-full rounded-lg border border-gray-100" />
+                                        ))}
+                                     </div>
+                                   )}
+                                 </>
+                               ) : (
+                                 <p>• Dispatch: Within 24 hours.<br/>• Returns: 7-Day no-questions-asked.</p>
+                               )}
                             </div>
                          </div>
                       </div>
@@ -460,7 +546,9 @@ const ProductDetailsPage = () => {
                >
                  {isOutOfStock ? "Out of Stock" : (
                     <>
-                      <div className="absolute inset-0 w-full h-full"><div className="absolute top-0 left-0 w-1/2 h-full bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-[-20deg] animate-shine"></div></div>
+                      <div className="absolute inset-0 w-full h-full overflow-hidden">
+                           <div className="absolute top-0 left-0 w-1/2 h-full bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-[-20deg] animate-shine"></div>
+                      </div>
                       <span className="relative z-10">Pay Online</span>
                     </>
                  )}

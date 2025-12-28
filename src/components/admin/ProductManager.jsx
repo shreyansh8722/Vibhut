@@ -5,9 +5,9 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { 
-  Plus, Search, Trash2, X, Save, UploadCloud, Download, Loader2 
+  Plus, Search, Trash2, X, UploadCloud, Download, Loader2, Image as ImageIcon, FileText
 } from 'lucide-react';
-import { compressImage } from '../../lib/utils'; // Assuming you have this helper
+import { compressImage } from '../../lib/utils'; 
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const ProductManager = () => {
@@ -17,7 +17,7 @@ export const ProductManager = () => {
   const [isDrawerOpen, setDrawerOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
 
-  // 1. LISTEN TO FIREBASE (Real-time)
+  // 1. LISTEN TO FIREBASE
   useEffect(() => {
     const unsub = onSnapshot(collection(db, 'products'), (snap) => {
       const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -27,7 +27,7 @@ export const ProductManager = () => {
     return unsub;
   }, []);
 
-  // 2. DOWNLOAD JSON (For your Code Repo)
+  // 2. DOWNLOAD JSON
   const handleDownloadJSON = () => {
     const jsonString = JSON.stringify(products, null, 2);
     const blob = new Blob([jsonString], { type: "application/json" });
@@ -60,13 +60,12 @@ export const ProductManager = () => {
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-2xl font-bold">Product Manager</h2>
-          <p className="text-sm text-gray-500">Manage inventory and details</p>
+          <p className="text-sm text-gray-500">Manage inventory, gallery, and details</p>
         </div>
         <div className="flex gap-3">
           <button 
             onClick={handleDownloadJSON}
             className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-bold text-sm"
-            title="Download for src/data/products.json"
           >
             <Download size={16} /> Download JSON
           </button>
@@ -107,7 +106,15 @@ export const ProductManager = () => {
             {filteredProducts.map((p) => (
               <tr key={p.id} onClick={() => openDrawer(p)} className="hover:bg-gray-50 cursor-pointer">
                 <td className="p-4">
-                  <img src={p.featuredImageUrl} alt="" className="w-10 h-10 rounded bg-gray-100 object-cover border" />
+                   <div className="w-10 h-10 rounded bg-gray-100 border overflow-hidden relative">
+                     {p.imageUrls && p.imageUrls.length > 0 ? (
+                        <img src={p.imageUrls[0]} alt="" className="w-full h-full object-cover" />
+                     ) : p.featuredImageUrl ? (
+                        <img src={p.featuredImageUrl} alt="" className="w-full h-full object-cover" />
+                     ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-300"><ImageIcon size={16}/></div>
+                     )}
+                   </div>
                 </td>
                 <td className="p-4 font-medium">{p.name}</td>
                 <td className="p-4">
@@ -130,7 +137,6 @@ export const ProductManager = () => {
         </table>
       </div>
 
-      {/* Product Form Drawer */}
       <ProductDrawer 
         isOpen={isDrawerOpen} 
         onClose={() => setDrawerOpen(false)} 
@@ -140,55 +146,165 @@ export const ProductManager = () => {
   );
 };
 
-// --- DRAWER COMPONENT ---
+// --- HELPER COMPONENT FOR IMAGE LISTS ---
+const ImageListManager = ({ label, existing, pending, onAdd, onRemoveExisting, onRemovePending }) => {
+  return (
+    <div className="mb-4">
+      <label className="block text-xs font-bold uppercase text-gray-500 mb-2">{label}</label>
+      <div className="grid grid-cols-3 gap-3">
+        {/* Existing Images */}
+        {existing.map((url, idx) => (
+          <div key={`exist-${idx}`} className="aspect-square relative group rounded-lg overflow-hidden border border-gray-200">
+            <img src={url} alt="" className="w-full h-full object-cover" />
+            <button
+              type="button"
+              onClick={() => onRemoveExisting(idx)}
+              className="absolute top-1 right-1 bg-white/90 text-red-600 rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+            >
+              <X size={12} strokeWidth={3} />
+            </button>
+          </div>
+        ))}
+
+        {/* Pending Images */}
+        {pending.map((entry, idx) => (
+          <div key={`new-${idx}`} className="aspect-square relative group rounded-lg overflow-hidden border-2 border-green-500">
+            <img src={entry.preview} alt="" className="w-full h-full object-cover opacity-80" />
+            <button
+              type="button"
+              onClick={() => onRemovePending(idx)}
+              className="absolute top-1 right-1 bg-white/90 text-red-600 rounded-full p-1 shadow-sm"
+            >
+              <X size={12} strokeWidth={3} />
+            </button>
+            <div className="absolute bottom-0 left-0 right-0 bg-green-500 text-white text-[9px] text-center py-1 uppercase font-bold">New</div>
+          </div>
+        ))}
+
+        {/* Upload Button */}
+        <label className="aspect-square bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-black hover:bg-gray-100 transition-colors">
+          <input 
+            type="file" 
+            accept="image/*" 
+            multiple 
+            onChange={onAdd}
+            className="hidden" 
+          />
+          <Plus size={24} className="text-gray-400 mb-1" />
+          <span className="text-[10px] font-bold uppercase text-gray-500">Add</span>
+        </label>
+      </div>
+    </div>
+  );
+};
+
+// --- MAIN DRAWER COMPONENT ---
 const ProductDrawer = ({ isOpen, onClose, product }) => {
   const isNew = !product;
   const [form, setForm] = useState({});
-  const [imageFile, setImageFile] = useState(null);
-  const [preview, setPreview] = useState('');
   const [saving, setSaving] = useState(false);
+
+  // 1. Gallery Images State
+  const [galleryExisting, setGalleryExisting] = useState([]);
+  const [galleryNew, setGalleryNew] = useState([]);
+
+  // 2. Description/Detail Images State
+  const [detailExisting, setDetailExisting] = useState([]);
+  const [detailNew, setDetailNew] = useState([]);
 
   useEffect(() => {
     if (isOpen) {
       setForm(product || { 
         name: '', price: '', stock: 10, category: 'Rudraksha', description: '' 
       });
-      setPreview(product?.featuredImageUrl || '');
-      setImageFile(null);
+
+      // Init Gallery
+      let initGallery = [];
+      if (product?.imageUrls && Array.isArray(product.imageUrls)) {
+        initGallery = product.imageUrls;
+      } else if (product?.featuredImageUrl) {
+        initGallery = [product.featuredImageUrl];
+      }
+      setGalleryExisting(initGallery);
+      setGalleryNew([]);
+
+      // Init Details
+      let initDetails = [];
+      if (product?.detailImageUrls && Array.isArray(product.detailImageUrls)) {
+        initDetails = product.detailImageUrls;
+      }
+      setDetailExisting(initDetails);
+      setDetailNew([]);
     }
   }, [isOpen, product]);
+
+  // Handlers for Gallery
+  const handleGalleryAdd = (e) => {
+    if (e.target.files) {
+      const files = Array.from(e.target.files);
+      const newEntries = files.map(file => ({ file, preview: URL.createObjectURL(file) }));
+      setGalleryNew(prev => [...prev, ...newEntries]);
+    }
+  };
+  const removeGalleryExisting = (idx) => setGalleryExisting(prev => prev.filter((_, i) => i !== idx));
+  const removeGalleryNew = (idx) => setGalleryNew(prev => prev.filter((_, i) => i !== idx));
+
+  // Handlers for Details
+  const handleDetailAdd = (e) => {
+    if (e.target.files) {
+      const files = Array.from(e.target.files);
+      const newEntries = files.map(file => ({ file, preview: URL.createObjectURL(file) }));
+      setDetailNew(prev => [...prev, ...newEntries]);
+    }
+  };
+  const removeDetailExisting = (idx) => setDetailExisting(prev => prev.filter((_, i) => i !== idx));
+  const removeDetailNew = (idx) => setDetailNew(prev => prev.filter((_, i) => i !== idx));
+
+  // Helper to upload list of files
+  const uploadFiles = async (fileEntries) => {
+    return Promise.all(
+      fileEntries.map(async (entry) => {
+        const compressed = await compressImage(entry.file);
+        const storageRef = ref(storage, `products/${Date.now()}_${entry.file.name}`);
+        await uploadBytes(storageRef, compressed);
+        return await getDownloadURL(storageRef);
+      })
+    );
+  };
 
   const handleSave = async (e) => {
     e.preventDefault();
     setSaving(true);
 
     try {
-      let imageUrl = preview;
+      // Upload New Files
+      const newGalleryUrls = await uploadFiles(galleryNew);
+      const newDetailUrls = await uploadFiles(detailNew);
 
-      // 1. Upload Image if changed
-      if (imageFile) {
-        const compressed = await compressImage(imageFile);
-        const storageRef = ref(storage, `products/${Date.now()}_${imageFile.name}`);
-        await uploadBytes(storageRef, compressed);
-        imageUrl = await getDownloadURL(storageRef);
-      }
+      // Combine
+      const finalGallery = [...galleryExisting, ...newGalleryUrls];
+      const finalDetails = [...detailExisting, ...newDetailUrls];
 
-      // 2. Prepare Payload
+      // Payload
       const payload = {
         ...form,
         id: product?.id || `prod_${Date.now()}`,
-        price: Number(form.price), // Ensure Number
-        stock: Number(form.stock), // Ensure Number (Critical for logic)
-        featuredImageUrl: imageUrl,
-        imageUrls: [imageUrl], // Simple single image support
+        price: Number(form.price),
+        stock: Number(form.stock),
+        
+        // Gallery Data
+        imageUrls: finalGallery,
+        featuredImageUrl: finalGallery.length > 0 ? finalGallery[0] : '',
+        
+        // Detail Images Data
+        detailImageUrls: finalDetails,
+
         updatedAt: serverTimestamp()
       };
 
       if (isNew) payload.createdAt = serverTimestamp();
 
-      // 3. WRITE TO FIRESTORE
       await setDoc(doc(db, 'products', payload.id), payload, { merge: true });
-      
       onClose();
     } catch (err) {
       console.error(err);
@@ -202,10 +318,11 @@ const ProductDrawer = ({ isOpen, onClose, product }) => {
     <AnimatePresence>
       {isOpen && (
         <>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40" />
+          {/* High Z-Index to stay above Navbar */}
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[200]" />
           <motion.div 
             initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
-            className="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl z-50 flex flex-col"
+            className="fixed right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl z-[210] flex flex-col"
           >
             <div className="p-4 border-b flex justify-between items-center">
               <h3 className="font-bold text-lg">{isNew ? 'New Product' : 'Edit Product'}</h3>
@@ -213,32 +330,19 @@ const ProductDrawer = ({ isOpen, onClose, product }) => {
             </div>
             
             <div className="flex-1 overflow-y-auto p-6">
-              <form id="product-form" onSubmit={handleSave} className="space-y-4">
+              <form id="product-form" onSubmit={handleSave} className="space-y-6">
                 
-                {/* Image Upload */}
-                <div className="aspect-video bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center relative overflow-hidden cursor-pointer hover:border-black transition-colors">
-                  <input 
-                    type="file" 
-                    accept="image/*" 
-                    onChange={(e) => {
-                      const file = e.target.files[0];
-                      if(file) {
-                        setImageFile(file);
-                        setPreview(URL.createObjectURL(file));
-                      }
-                    }} 
-                    className="absolute inset-0 opacity-0 cursor-pointer" 
-                  />
-                  {preview ? (
-                    <img src={preview} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="text-center text-gray-400">
-                      <UploadCloud className="mx-auto mb-2" />
-                      <span className="text-xs font-bold uppercase">Upload Image</span>
-                    </div>
-                  )}
-                </div>
+                {/* 1. Main Gallery Images */}
+                <ImageListManager 
+                  label="Main Gallery Images" 
+                  existing={galleryExisting}
+                  pending={galleryNew}
+                  onAdd={handleGalleryAdd}
+                  onRemoveExisting={removeGalleryExisting}
+                  onRemovePending={removeGalleryNew}
+                />
 
+                {/* 2. Basic Info */}
                 <div>
                   <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Name</label>
                   <input required className="w-full p-3 border rounded-lg text-sm" value={form.name} onChange={e => setForm({...form, name: e.target.value})} />
@@ -261,12 +365,33 @@ const ProductDrawer = ({ isOpen, onClose, product }) => {
                     <option value="Rudraksha">Rudraksha</option>
                     <option value="Gemstones">Gemstones</option>
                     <option value="Yantra">Yantra</option>
+                    <option value="Mala">Mala</option>
+                    <option value="Parad">Parad</option>
                   </select>
                 </div>
 
+                {/* 3. Description */}
                 <div>
-                  <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Description</label>
+                  <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Description Text</label>
                   <textarea rows={4} className="w-full p-3 border rounded-lg text-sm" value={form.description} onChange={e => setForm({...form, description: e.target.value})} />
+                </div>
+
+                {/* 4. Description Images (NEW) */}
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                   <div className="flex items-center gap-2 mb-2">
+                      <FileText size={14} className="text-gray-500"/>
+                      <label className="text-xs font-bold uppercase text-gray-500">Description Images</label>
+                   </div>
+                   <p className="text-[10px] text-gray-400 mb-3">These images will appear below the description text (e.g. Benefits chart, Size guide).</p>
+                   
+                   <ImageListManager 
+                    label="" 
+                    existing={detailExisting}
+                    pending={detailNew}
+                    onAdd={handleDetailAdd}
+                    onRemoveExisting={removeDetailExisting}
+                    onRemovePending={removeDetailNew}
+                  />
                 </div>
 
               </form>
@@ -280,7 +405,7 @@ const ProductDrawer = ({ isOpen, onClose, product }) => {
                 className="w-full py-3 bg-black text-white rounded-lg font-bold text-sm uppercase tracking-widest flex items-center justify-center gap-2"
               >
                 {saving && <Loader2 className="animate-spin" size={16} />}
-                Save to Database
+                Save Product
               </button>
             </div>
           </motion.div>

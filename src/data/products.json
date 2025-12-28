@@ -1,40 +1,43 @@
 [
   {
     "id": "sua1NttMjYIGdOoqCe8L",
-    "description": "Lorem Ipsumm",
+    "chakra": "",
+    "detailImageUrls": [
+      "https://firebasestorage.googleapis.com/v0/b/vishwanatham-739fe.firebasestorage.app/o/products%2F1766947084027_Untitled%20design%20(40).png?alt=media&token=b1b877bb-a2be-4534-b05c-44d070c757b5"
+    ],
+    "createdAt": {
+      "seconds": 1766317011,
+      "nanoseconds": 696000000
+    },
+    "weight": "",
+    "origin": "Nepal",
+    "name": "5 mukhi rudraksha",
+    "planet": "",
+    "deity": "",
+    "price": 499,
+    "imageUrls": [
+      "https://firebasestorage.googleapis.com/v0/b/vishwanatham-739fe.firebasestorage.app/o/products%2F1766943897880_Gemini_Generated_Image_bpqvm6bpqvm6bpqv%20(1).png?alt=media&token=ee1cc6af-d1c8-437c-a927-b76f4fd3216e",
+      "https://firebasestorage.googleapis.com/v0/b/vishwanatham-739fe.firebasestorage.app/o/products%2F1766947082361_shopping%20(1).webp?alt=media&token=a6510861-9a5b-47b3-a2e8-37040f1492de"
+    ],
     "mantra": "",
-    "category": "Rudraksha",
-    "certification": "",
+    "mukhi": "5 mukhi",
+    "fullDescription": "Lorem Ipsumm",
+    "stock": 2,
+    "updatedAt": {
+      "seconds": 1766947086,
+      "nanoseconds": 21000000
+    },
+    "sku": "RUD-123",
     "tags_lowercase": [
       "rudraksha",
       "5 mukhi rudraksha",
       "5 mukhi"
     ],
-    "origin": "Nepal",
-    "chakra": "",
-    "deity": "",
-    "comparePrice": 999,
-    "name": "5 mukhi rudraksha",
-    "planet": "",
-    "sku": "RUD-123",
-    "mukhi": "5 mukhi",
-    "weight": "",
-    "createdAt": {
-      "seconds": 1766317011,
-      "nanoseconds": 696000000
-    },
-    "updatedAt": {
-      "seconds": 1766317518,
-      "nanoseconds": 438000000
-    },
-    "fullDescription": "Lorem Ipsumm",
+    "certification": "",
     "beadSize": "",
-    "imageUrls": [
-      "https://firebasestorage.googleapis.com/v0/b/vishwanatham-739fe.firebasestorage.app/o/products%2F1766316806802_new-1766316779721-0_compressed.webp?alt=media&token=e31ed14e-e208-4e8f-8d02-91cae02f8160",
-      "https://firebasestorage.googleapis.com/v0/b/vishwanatham-739fe.firebasestorage.app/o/products%2F1766317515090_new-1766317513451-0.webp?alt=media&token=19397dbd-b713-4771-aeaf-186f38f8614e"
-    ],
-    "stock": 8,
-    "featuredImageUrl": "https://firebasestorage.googleapis.com/v0/b/vishwanatham-739fe.firebasestorage.app/o/products%2F1766316806802_new-1766316779721-0_compressed.webp?alt=media&token=e31ed14e-e208-4e8f-8d02-91cae02f8160",
-    "price": 499
+    "featuredImageUrl": "https://firebasestorage.googleapis.com/v0/b/vishwanatham-739fe.firebasestorage.app/o/products%2F1766943897880_Gemini_Generated_Image_bpqvm6bpqvm6bpqv%20(1).png?alt=media&token=ee1cc6af-d1c8-437c-a927-b76f4fd3216e",
+    "comparePrice": 999,
+    "description": "Lorem Ipsumm",
+    "category": "Rudraksha"
   }
 ]
