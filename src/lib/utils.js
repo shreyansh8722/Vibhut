@@ -1,6 +1,9 @@
 // src/lib/utils.js
 
-export const compressImage = async (file, maxWidth = 1200, quality = 0.7) => {
+// SETTINGS CHANGED:
+// maxWidth: 1000 (Perfect for Zoom & Retina screens, but much smaller than 1200)
+// quality: 0.8 (Very High Quality, virtually lossless to human eye)
+export const compressImage = async (file, maxWidth = 1000, quality = 0.8) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -22,7 +25,7 @@ export const compressImage = async (file, maxWidth = 1200, quality = 0.7) => {
         elem.height = height;
         const ctx = elem.getContext('2d');
         
-        // Better smoothing for resizing
+        // Critical for Quality: Use High Quality Smoothing
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
         
@@ -36,10 +39,10 @@ export const compressImage = async (file, maxWidth = 1200, quality = 0.7) => {
               return;
             }
             
-            // Log savings (Open your browser console to see this!)
+            // Debugging: Check your Console when uploading to see the magic!
             const originalSize = (file.size / 1024).toFixed(2);
             const newSize = (blob.size / 1024).toFixed(2);
-            console.log(`Compressed: ${originalSize}KB -> ${newSize}KB (Quality: ${quality})`);
+            console.log(`✨ Optimized: ${originalSize}KB -> ${newSize}KB (Quality: ${quality})`);
 
             const newFile = new File(
               [blob], 

@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { Star, ShoppingBag } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 
 export const ProductCard = ({ product }) => {
   const { addToCart } = useCart();
-  const [isHovered, setIsHovered] = useState(false);
 
   if (!product) return null;
 
@@ -14,9 +13,6 @@ export const ProductCard = ({ product }) => {
     ? product.imageUrls 
     : [product.featuredImageUrl || product.image || 'https://via.placeholder.com/400'];
 
-  // Switch to 2nd image on hover
-  const displayImage = (isHovered && imageList.length > 1) ? imageList[1] : imageList[0];
-  
   const price = Number(product.price) || 0;
   const comparePrice = Number(product.comparePrice) || 0;
   const savings = comparePrice > price ? comparePrice - price : 0;
@@ -24,22 +20,30 @@ export const ProductCard = ({ product }) => {
   const rating = product.rating || 0;
 
   return (
-    // CARD: Clean transition, subtle border hover
     <div className="group relative flex flex-col bg-white p-2 transition-all duration-300 hover:shadow-lg rounded-sm border border-transparent hover:border-black/10">
       
       {/* 1. IMAGE CONTAINER */}
-      <div 
-        className="relative aspect-square w-full overflow-hidden bg-[#FAFAFA] rounded-sm mb-3"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-      >
-        <Link to={`/product/${product.id}`} className="block w-full h-full">
+      <div className="relative aspect-square w-full overflow-hidden bg-white rounded-sm mb-3">
+        <Link to={`/product/${product.id}`} className="block w-full h-full relative">
+          
+          {/* PRIMARY IMAGE (Bottom Layer) */}
           <img
-            src={displayImage}
+            src={imageList[0]}
             alt={product.name}
-            className="w-full h-full object-cover object-center mix-blend-multiply"
+            className="w-full h-full object-cover object-center"
             loading="lazy"
           />
+
+          {/* SECONDARY IMAGE (Top Layer) */}
+          {/* Rendered immediately (no delay) but hidden with opacity-0. Fades in on hover. */}
+          {imageList.length > 1 && (
+            <img
+              src={imageList[1]}
+              alt={product.name}
+              className="absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-300 opacity-0 group-hover:opacity-100 bg-white"
+              loading="lazy"
+            />
+          )}
         </Link>
 
         {/* Badges - Top Left */}
@@ -88,7 +92,7 @@ export const ProductCard = ({ product }) => {
               )}
            </div>
 
-           {/* Rating - Subtle Appearance */}
+           {/* Rating */}
            {hasReviews && (
                <div className="flex items-center gap-1 opacity-60">
                     <Star size={10} className="fill-black text-black" strokeWidth={0} />
