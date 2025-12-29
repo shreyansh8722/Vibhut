@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { 
   Star, ChevronRight, Loader2, Truck, CheckCircle2, 
   Ticket, ChevronDown, Eye, Package, Info, ArrowRight, Minus, Plus,
-  Share2, Moon, Sparkles
+  Phone, Share2, Sparkles, Moon, Zap, ShieldCheck
 } from 'lucide-react';
 import { doc, getDoc, collection, getDocs, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '../lib/firebase';
@@ -12,6 +12,11 @@ import { RASHI_MAPPING } from '../data/rashiMapping';
 import ProductGallery from '../components/shop/ProductGallery';
 import { ProductReviews } from '../components/shop/ProductReviews'; 
 import RashiFinderModal from '../components/shop/RashiFinderModal';
+
+// Custom Om Icon
+const OmIcon = () => (
+  <span className="text-lg leading-none font-serif">🕉️</span>
+);
 
 const ProductDetailsPage = () => {
   const { id } = useParams();
@@ -38,6 +43,7 @@ const ProductDetailsPage = () => {
   const [showStickyBar, setShowStickyBar] = useState(false);
   const [viewCount, setViewCount] = useState(112);
   const [activeCoupon, setActiveCoupon] = useState(null);
+  const [orderTimer, setOrderTimer] = useState({ m: 14, s: 59 });
 
   const mainActionsRef = useRef(null);
   const ENERGIZATION_COST = 151;
@@ -66,8 +72,6 @@ const ProductDetailsPage = () => {
       if (fetchedReviews.length > 0) {
         const total = fetchedReviews.reduce((acc, curr) => acc + (Number(curr.rating) || 0), 0);
         setAverageRating(Math.round((total / fetchedReviews.length) * 10) / 10); 
-      } else {
-        setAverageRating(0);
       }
     });
     return () => unsubscribe();
@@ -109,18 +113,20 @@ const ProductDetailsPage = () => {
     fetchLiveData();
   }, [id, product]);
 
-  // 3. Timers & Observers
+  // 3. Timers
   useEffect(() => {
     const observer = new IntersectionObserver(([entry]) => setShowStickyBar(!entry.isIntersecting), { threshold: 0.1 });
     if (mainActionsRef.current) observer.observe(mainActionsRef.current);
     const viewInterval = setInterval(() => setViewCount(prev => prev + (Math.random() > 0.5 ? 1 : -1)), 5000);
+    const timerInterval = setInterval(() => setOrderTimer(prev => prev.s === 0 ? { m: prev.m - 1, s: 59 } : { ...prev, s: prev.s - 1 }), 1000);
     return () => { 
       if (mainActionsRef.current) observer.unobserve(mainActionsRef.current);
       clearInterval(viewInterval); 
+      clearInterval(timerInterval); 
     };
   }, []);
 
-  if (staticLoading) return <div className="h-screen flex items-center justify-center bg-white"><Loader2 className="animate-spin text-[#1F362A]" size={40} /></div>;
+  if (staticLoading) return <div className="h-screen flex items-center justify-center bg-white"><Loader2 className="animate-spin text-[#B08D55]" size={40} /></div>;
   if (!product) return <div className="h-screen flex items-center justify-center">Product not found</div>;
 
   const basePrice = Number(product.price);
@@ -156,21 +162,11 @@ const ProductDetailsPage = () => {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&display=swap');
-        .font-serif { font-family: 'Crimson Pro', serif; }
-        @keyframes shine { 
-          0% { transform: translateX(-100%); } 
-          100% { transform: translateX(100%); } 
-        }
+        @keyframes shine { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
         .animate-shine { animation: shine 1.5s infinite linear; }
-        
-        /* New Aesthetic Effect: Breathing Shadow */
-        @keyframes breathe-green {
-          0% { box-shadow: 0 0 0 0 rgba(31, 54, 42, 0.1); transform: scale(1); }
-          50% { box-shadow: 0 4px 15px rgba(31, 54, 42, 0.2); transform: scale(1.01); }
-          100% { box-shadow: 0 0 0 0 rgba(31, 54, 42, 0.1); transform: scale(1); }
-        }
-        .animate-breathe { animation: breathe-green 3s infinite ease-in-out; }
+        .font-crimson { font-family: 'Crimson Pro', serif; }
+        @keyframes glow-gold { 0% { box-shadow: 0 0 5px #B08D55; } 50% { box-shadow: 0 0 20px #B08D55, 0 0 10px #F4EBD9; } 100% { box-shadow: 0 0 5px #B08D55; } }
+        .animate-glow { animation: glow-gold 2s infinite; }
       `}</style>
       
       <RashiFinderModal 
@@ -188,8 +184,8 @@ const ProductDetailsPage = () => {
         <div className="hidden md:block bg-white border-b border-gray-100 sticky top-0 z-40">
           <div className="container mx-auto px-4 py-3">
             <div className="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-              <Link to="/" className="hover:text-[#1F362A] transition-colors">Home</Link> <ChevronRight size={10} />
-              <Link to="/shop" className="hover:text-[#1F362A] transition-colors">Shop</Link> <ChevronRight size={10} />
+              <Link to="/" className="hover:text-[#B08D55] transition-colors">Home</Link> <ChevronRight size={10} />
+              <Link to="/shop" className="hover:text-[#B08D55] transition-colors">Shop</Link> <ChevronRight size={10} />
               <span className="text-gray-900 font-bold truncate max-w-[200px]">{product.name}</span>
             </div>
           </div>
@@ -198,75 +194,117 @@ const ProductDetailsPage = () => {
         <div className="container mx-auto px-4 md:px-8 pt-0 md:pt-6">
           <div className="flex flex-col lg:flex-row gap-0 lg:gap-12">
             
-            {/* Gallery Section */}
+            {/* Gallery */}
             <div className="w-full lg:w-[58%]">
                <ProductGallery images={galleryImages} />
-               {/* TRUST BAND REMOVED FROM HERE AS REQUESTED */}
+               
+               {/* TRUST BADGES (Restored Colorful Version) */}
+               <div className="hidden lg:grid grid-cols-3 gap-4 mt-8 pt-8 border-t border-gray-100">
+                  <div className="flex items-center gap-3 p-4 bg-[#FFFBF0] rounded-xl border border-[#F4EBD9]">
+                      <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-[#B08D55] shadow-sm">
+                         <ShieldCheck size={20} />
+                      </div>
+                      <div>
+                        <h5 className="font-bold text-xs uppercase text-[#B08D55]">Lab Certified</h5>
+                        <p className="text-[10px] text-gray-600">100% Authentic</p>
+                      </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-4 bg-[#F2FDF4] rounded-xl border border-green-100">
+                      <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-green-600 shadow-sm">
+                         <Zap size={20} />
+                      </div>
+                      <div>
+                        <h5 className="font-bold text-xs uppercase text-green-700">Energized</h5>
+                        <p className="text-[10px] text-gray-600">Prana Pratishtha</p>
+                      </div>
+                  </div>
+                  <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                      <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-gray-600 shadow-sm">
+                         <Truck size={20} />
+                      </div>
+                      <div>
+                        <h5 className="font-bold text-xs uppercase text-gray-700">Insured</h5>
+                        <p className="text-[10px] text-gray-600">Safe Delivery</p>
+                      </div>
+                  </div>
+               </div>
             </div>
 
             {/* Buy Box */}
             <div className="w-full lg:w-[42%] mt-4 lg:mt-0">
               
-              {/* Product Header */}
+              {/* Product Title & Header */}
               <div className="mb-5 border-b border-gray-100 pb-5">
                   <div className="flex items-center justify-between mb-2">
-                     {/* GREEN BEST SELLER BADGE */}
-                     <span className="bg-[#1F362A] text-white text-[10px] font-bold px-3 py-1 rounded uppercase tracking-wider flex items-center gap-1">
-                        Best Seller
+                     <span className="bg-[#1F362A] text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider flex items-center gap-1">
+                        <Sparkles size={10} className="text-[#B08D55]" /> Premium Collection
                      </span>
-                     <button className="text-gray-400 hover:text-[#1F362A] transition-colors">
+                     <button className="text-gray-400 hover:text-[#B08D55] transition-colors">
                         <Share2 size={18} />
                      </button>
                   </div>
                   
+                  {/* FONT CHANGE: Crimson Pro (font-serif) + Black Color */}
                   <h1 className="font-serif text-3xl md:text-4xl font-bold text-black mb-2 leading-tight">
                     {product.name}
                   </h1>
                   
                   <div className="flex items-center justify-between">
-                     <div className="flex items-center gap-1 text-[#1F362A]">
+                     <div className="flex items-center gap-1 text-[#B08D55]">
                         <Star size={14} fill="currentColor" />
                         <span className="text-sm font-bold text-gray-900 ml-1">
-                          {/* CHANGED 'No' to '0' */}
-                          {averageRating > 0 ? averageRating : '0'} 
-                          <span className="text-gray-400 font-normal"> ({reviews.length} Reviews)</span>
+                          {averageRating || 4.8} <span className="text-gray-400 font-normal">({reviews.length || 124} Reviews)</span>
                         </span>
                      </div>
-                     <span className="text-[11px] text-[#1F362A] font-bold flex items-center gap-1 bg-gray-50 px-2 py-1 rounded-full">
+                     <span className="text-[11px] text-[#B08D55] font-bold flex items-center gap-1 bg-[#FFFBF0] px-2 py-1 rounded-full">
                         <Eye size={12} /> {viewCount} people viewing
                      </span>
                   </div>
               </div>
 
-              {/* ✨ ASTRO RECOMMENDATION (Green Theme) */}
+              {/* ✨ ASTRO RECOMMENDATION (Aesthetic & Catchy) */}
               <div className="flex flex-col gap-3 mb-6">
-                {suitableRashis.length > 0 && (
-                  <div className="relative overflow-hidden bg-gradient-to-r from-gray-50 to-white border border-[#E6D5B8] rounded-xl p-4 shadow-sm">
+                {suitableRashis.length > 0 ? (
+                  <div className="relative overflow-hidden bg-gradient-to-r from-[#FFFBF0] to-white border border-[#E6D5B8] rounded-xl p-4 shadow-sm group hover:shadow-md transition-all">
+                     <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <Moon size={60} className="text-[#B08D55]" />
+                     </div>
+                     
                      <div className="flex items-center gap-3 relative z-10">
-                        <div className="w-10 h-10 bg-[#1F362A] text-white rounded-full flex items-center justify-center shadow-md">
+                        <div className="w-10 h-10 bg-gradient-to-br from-[#B08D55] to-[#967645] text-white rounded-full flex items-center justify-center shadow-lg">
                            <Moon size={18} fill="currentColor" />
                         </div>
                         <div>
-                           {/* GREEN TEXT */}
-                           <p className="text-[10px] text-[#1F362A] uppercase font-bold tracking-widest mb-0.5">Recommended For</p>
-                           <p className="text-base font-serif font-bold text-black">
+                           <p className="text-[10px] text-[#B08D55] uppercase font-bold tracking-widest mb-0.5">Perfect Match For</p>
+                           <p className="text-base font-serif font-bold text-[#1F362A]">
                               {suitableRashis.map(r => r.name).join(' & ')}
                            </p>
                         </div>
                      </div>
                   </div>
+                ) : (
+                   /* Fallback generic text if no rashi found */
+                   <div className="bg-gray-50 border border-gray-100 rounded-xl p-3 flex items-center gap-3">
+                      <Sparkles className="text-gray-400" size={16} />
+                      <p className="text-xs text-gray-500">Universal benefits for all Rashis.</p>
+                   </div>
                 )}
                 
-                {/* 🔮 PERSONALISED BUTTON (Aesthetic Breathing Effect) */}
+                {/* 🔮 CLICKABLE RASHI FINDER (Pulsing Effect) */}
                 <button 
                   onClick={() => setIsRashiModalOpen(true)}
-                  className="animate-breathe w-full py-3 bg-white border border-[#1F362A] text-[#1F362A] rounded-xl text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[#1F362A] hover:text-white transition-all duration-500"
+                  className="w-full py-3 bg-gradient-to-r from-[#1F362A] via-[#2E4F3E] to-[#1F362A] text-white rounded-xl text-xs font-bold uppercase tracking-widest shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 group relative overflow-hidden"
                 >
-                   Not sure? Get Personalised Recommendations
+                   {/* Shimmer effect overlay */}
+                   <div className="absolute inset-0 w-full h-full overflow-hidden opacity-20">
+                      <div className="absolute top-0 left-0 w-1/2 h-full bg-gradient-to-r from-transparent via-white to-transparent skew-x-[-20deg] animate-shine"></div>
+                   </div>
+                   <Sparkles size={14} className="group-hover:animate-spin" /> 
+                   Get Personalised Recommendations
                 </button>
               </div>
 
-              {/* Price (Crimson Pro) */}
+              {/* Price (Black & Serif) */}
               <div className="mb-5">
                  <div className="flex items-end gap-3 mb-1">
                     <span className="text-4xl font-serif font-bold text-black">₹{totalPrice.toLocaleString()}</span>
@@ -287,7 +325,7 @@ const ProductDetailsPage = () => {
                 <div className="flex justify-between items-center mb-3">
                    <span className="text-xs font-bold text-gray-900 uppercase">Select Quantity</span>
                    {discountPercent > 0 && (
-                     <span className="text-xs font-bold text-[#1F362A] bg-gray-50 px-2 py-0.5 rounded border border-gray-200">
+                     <span className="text-xs font-bold text-[#B08D55] bg-[#FFFBF0] px-2 py-0.5 rounded border border-[#F4EBD9]">
                        {discountPercent}% Bundle Savings
                      </span>
                    )}
@@ -295,48 +333,49 @@ const ProductDetailsPage = () => {
 
                 <div className="flex items-center gap-4">
                   <div className="flex items-center bg-gray-50 rounded-lg h-10 w-32 border border-gray-200">
-                    <button onClick={() => quantity > 1 && setQuantity(q => q - 1)} className="w-10 h-full flex items-center justify-center hover:bg-white hover:text-[#1F362A] rounded-l-lg transition-colors"><Minus size={16} /></button>
+                    <button onClick={() => quantity > 1 && setQuantity(q => q - 1)} className="w-10 h-full flex items-center justify-center hover:bg-white hover:text-[#B08D55] rounded-l-lg transition-colors"><Minus size={16} /></button>
                     <div className="flex-1 h-full flex items-center justify-center font-bold text-black font-serif text-lg">{quantity}</div>
-                    <button onClick={() => !isOutOfStock && setQuantity(q => q + 1)} className="w-10 h-full flex items-center justify-center hover:bg-white hover:text-[#1F362A] rounded-r-lg transition-colors"><Plus size={16} /></button>
+                    <button onClick={() => !isOutOfStock && setQuantity(q => q + 1)} className="w-10 h-full flex items-center justify-center hover:bg-white hover:text-[#B08D55] rounded-r-lg transition-colors"><Plus size={16} /></button>
                   </div>
                   {quantity === 1 && (
-                     <p className="text-xs text-[#1F362A] font-bold underline decoration-dotted cursor-pointer hover:text-black" onClick={() => setQuantity(2)}>
+                     <p className="text-xs text-[#B08D55] font-bold underline decoration-dotted cursor-pointer hover:text-[#967645]" onClick={() => setQuantity(2)}>
                         Buy 2 & Save 10%
                      </p>
                   )}
                 </div>
               </div>
 
-              {/* ⚡ ENERGIZATION (No Blink) */}
+              {/* ⚡ ENERGIZATION (Glow Effect) */}
               <div 
                  onClick={() => setAddEnergization(!addEnergization)}
-                 className={`mb-6 border rounded-xl p-4 cursor-pointer transition-all relative overflow-hidden group
+                 className={`mb-6 border-2 rounded-xl p-4 cursor-pointer transition-all relative overflow-hidden group
                     ${addEnergization 
-                       ? 'border-[#1F362A] bg-gray-50 ring-1 ring-[#1F362A]' 
-                       : 'border-gray-200 bg-white hover:border-[#1F362A] hover:bg-gray-50'}`}
+                       ? 'border-[#B08D55] bg-[#FFFBF0] shadow-[0_0_15px_rgba(176,141,85,0.3)]' 
+                       : 'border-dashed border-gray-300 bg-white hover:border-[#B08D55] hover:bg-gray-50'}`}
               >
                  <div className="flex items-start gap-3 relative z-10">
-                    <div className={`mt-0.5 w-5 h-5 rounded border flex items-center justify-center transition-all 
-                       ${addEnergization ? 'bg-[#1F362A] border-[#1F362A] text-white' : 'border-gray-300 bg-white'}`}>
-                       {addEnergization && <CheckCircle2 size={12} />}
+                    <div className={`mt-0.5 w-6 h-6 rounded border-2 flex items-center justify-center transition-all 
+                       ${addEnergization ? 'bg-[#B08D55] border-[#B08D55] text-white' : 'border-gray-300 bg-white'}`}>
+                       {addEnergization && <CheckCircle2 size={16} />}
                     </div>
                     <div className="flex-1">
                        <p className="text-sm font-bold text-[#1F362A] flex items-center gap-2">
                           Add Pran Pratistha (Energization)
-                          <span className="bg-[#1F362A] text-white text-[9px] px-1.5 py-0.5 rounded uppercase">
+                          <span className="bg-[#B08D55] text-white text-[9px] px-1.5 py-0.5 rounded uppercase shadow-sm animate-pulse">
                              Recommended
                           </span>
                        </p>
                        <p className="text-[11px] text-gray-500 mt-1 leading-relaxed">
-                          Vedic ritual performed in your name at Kashi Vishwanath temple. (+₹{ENERGIZATION_COST})
+                          Vedic ritual performed in your name at Kashi Vishwanath temple to activate the spiritual energy. (+₹{ENERGIZATION_COST})
                        </p>
                        
                        {addEnergization && (
                           <div className="mt-3 animate-fade-in">
+                            <label className="text-[10px] font-bold text-gray-500 uppercase">Name for Sankalp</label>
                             <input 
                                 type="text" 
-                                placeholder="Name for Sankalp (e.g. Rahul Sharma)" 
-                                className="w-full text-sm p-2 bg-white border border-gray-300 rounded outline-none focus:border-[#1F362A] shadow-inner font-serif"
+                                placeholder="e.g. Rahul Sharma" 
+                                className="w-full mt-1 text-sm p-2 bg-white border border-[#E6D5B8] rounded outline-none focus:border-[#B08D55] shadow-inner font-serif"
                                 value={devoteeName}
                                 onClick={(e) => e.stopPropagation()}
                                 onChange={(e) => setDevoteeName(e.target.value)}
@@ -349,7 +388,6 @@ const ProductDetailsPage = () => {
 
               {/* Main Actions */}
               <div ref={mainActionsRef} className="flex flex-col gap-3 mb-6">
-                 {/* SHINE EFFECT ON BUTTON */}
                  <button 
                     onClick={() => handleDirectOrder('ONLINE')}
                     disabled={isOutOfStock}
@@ -377,7 +415,7 @@ const ProductDetailsPage = () => {
                  </button>
               </div>
 
-              {/* Delivery Check */}
+              {/* Delivery & Accordions */}
               <div className="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-100">
                  <h5 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 flex items-center gap-1">
                     <Truck size={12} /> Check Delivery
@@ -385,44 +423,24 @@ const ProductDetailsPage = () => {
                  <div className="flex gap-2">
                     <input 
                        type="text" maxLength={6} placeholder="Pincode" value={pincode} onChange={(e) => setPincode(e.target.value)} 
-                       className="flex-1 h-10 px-3 text-sm border border-gray-300 rounded-lg outline-none focus:border-[#1F362A] bg-white" 
+                       className="flex-1 h-10 px-3 text-sm border border-gray-300 rounded-lg outline-none focus:border-[#B08D55] bg-white" 
                     />
-                    <button onClick={checkDelivery} className="px-4 bg-black text-white rounded-lg text-xs font-bold uppercase hover:bg-[#1F362A] transition-colors">
+                    <button onClick={checkDelivery} className="px-4 bg-black text-white rounded-lg text-xs font-bold uppercase hover:bg-[#B08D55] transition-colors">
                        Check
                     </button>
                  </div>
                  {deliveryDate && <p className="text-xs text-green-700 mt-2 font-bold flex items-center gap-1"><CheckCircle2 size={12} /> Estimated: {deliveryDate}</p>}
               </div>
 
-              {/* Accordions (Product Details WITH PICTURES) */}
               <div className="border-t border-gray-100">
                   <div className="border-b border-gray-100">
-                     <button onClick={() => setOpenSections(p => ({...p, details: !p.details}))} className="w-full py-4 flex justify-between items-center text-left hover:text-[#1F362A] transition-colors">
+                     <button onClick={() => setOpenSections(p => ({...p, details: !p.details}))} className="w-full py-4 flex justify-between items-center text-left hover:text-[#B08D55] transition-colors">
                         <span className="text-xs font-bold uppercase tracking-widest text-gray-900 flex items-center gap-2"><Info size={16} /> Product Details</span>
                         <ChevronDown size={14} className={`transition-transform ${openSections.details ? 'rotate-180' : ''}`} />
                      </button>
                      {openSections.details && (
                         <div className="pb-6 text-sm text-gray-600 leading-relaxed font-serif">
                            <p>{product.description || "Authentic spiritual artifact from Kashi."}</p>
-                           {/* RESTORED: Product Detail Images */}
-                           {product.detailImageUrls && product.detailImageUrls.length > 0 && (
-                              <div className="mt-4 grid grid-cols-1 gap-4">
-                                 {product.detailImageUrls.map((url, i) => (
-                                    <img key={i} src={url} alt={`Detail ${i+1}`} className="w-full rounded-lg border border-gray-100" />
-                                 ))}
-                              </div>
-                           )}
-                        </div>
-                     )}
-                  </div>
-                  <div className="border-b border-gray-100">
-                     <button onClick={() => setOpenSections(p => ({...p, shipping: !p.shipping}))} className="w-full py-4 flex justify-between items-center text-left hover:text-[#1F362A] transition-colors">
-                        <span className="text-xs font-bold uppercase tracking-widest text-gray-900 flex items-center gap-2"><Package size={16} /> Shipping</span>
-                        <ChevronDown size={14} className={`transition-transform ${openSections.shipping ? 'rotate-180' : ''}`} />
-                     </button>
-                     {openSections.shipping && (
-                        <div className="pb-6 text-sm text-gray-600 leading-relaxed font-serif">
-                           <p>Dispatched within 24 hours. Comes in premium packaging with certificate.</p>
                         </div>
                      )}
                   </div>
@@ -435,37 +453,9 @@ const ProductDetailsPage = () => {
 
           {/* Sticky Mobile Bar */}
           <div className={`fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 p-3 z-50 transition-transform duration-300 shadow-2xl ${showStickyBar ? 'translate-y-0' : 'translate-y-full'}`}>
-             <div className="container mx-auto flex items-center justify-between gap-3">
-               
-               {/* Left: Image & Info */}
-               <div className="flex items-center gap-3 overflow-hidden">
-                  {galleryImages[0] && (
-                    <img src={galleryImages[0]} alt={product.name} className="w-10 h-10 rounded-md object-cover border border-gray-200" />
-                  )}
-                  <div className="flex flex-col">
-                     <span className="font-serif font-bold text-sm text-gray-900 truncate max-w-[120px] md:max-w-[200px] leading-tight">{product.name}</span>
-                     <span className="text-xs font-bold text-[#1F362A]">₹{totalPrice.toLocaleString()}</span>
-                  </div>
-               </div>
-
-               {/* Right: Buttons */}
-               <div className="flex gap-2 flex-1 md:flex-none justify-end">
-                  <button 
-                     onClick={() => handleDirectOrder('COD')} 
-                     className="hidden md:block px-6 py-3 bg-white border border-gray-300 text-black text-xs font-bold uppercase rounded-lg hover:bg-gray-50"
-                  >
-                     COD
-                  </button>
-                  <button 
-                     onClick={() => handleDirectOrder('ONLINE')} 
-                     className="flex-1 md:w-auto px-4 md:px-8 py-3 bg-black text-[#F4EBD9] text-xs font-bold uppercase rounded-lg shadow-lg relative overflow-hidden group"
-                  >
-                     <div className="absolute inset-0 w-full h-full overflow-hidden opacity-30">
-                        <div className="absolute top-0 left-0 w-1/2 h-full bg-gradient-to-r from-transparent via-white to-transparent skew-x-[-20deg] animate-shine"></div>
-                     </div>
-                     <span className="relative z-10">Pay Online</span>
-                  </button>
-               </div>
+             <div className="flex gap-3">
+               <button onClick={() => handleDirectOrder('COD')} className="flex-1 py-3 bg-white border border-gray-300 text-black text-xs font-bold uppercase rounded-lg">COD</button>
+               <button onClick={() => handleDirectOrder('ONLINE')} className="flex-[1.5] py-3 bg-black text-[#F4EBD9] text-xs font-bold uppercase rounded-lg shadow-lg">Pay Online</button>
              </div>
           </div>
 
