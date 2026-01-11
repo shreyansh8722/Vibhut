@@ -7,18 +7,19 @@
     animation: marquee 60s linear infinite;
   }
   
-  /* Premium Glass Effect - Clean White */
+  /* Glassmorphism for Navbar */
   .glass-nav {
-    background: rgba(255, 255, 255, 0.95); /* Pure white base */
+    background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid rgba(229, 231, 235, 0.5); /* Subtle gray border */
+    border-bottom: 1px solid rgba(229, 231, 235, 0.5);
   }
 
   .text-shadow-sm {
     text-shadow: 0 1px 2px rgba(0,0,0,0.1);
   }
   
+  /* Custom Scrollbar */
   .custom-scrollbar::-webkit-scrollbar {
     height: 4px;
     width: 4px;
@@ -27,8 +28,25 @@
     background: #f1f1f1;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #2E4F3E; /* Green branding on scrollbar */
+    background: #2E4F3E; 
     border-radius: 4px;
+  }
+
+  /* Golden Shimmer Animation */
+  @keyframes shimmer-gold {
+    0% { transform: translateX(-150%) skewX(-15deg); }
+    50% { transform: translateX(150%) skewX(-15deg); }
+    100% { transform: translateX(150%) skewX(-15deg); }
+  }
+  
+  .animate-shimmer-gold {
+    animation: shimmer-gold 2.5s infinite;
+  }
+
+  /* NEW: Sacred Mandala Pattern Background */
+  .bg-sacred-pattern {
+    background-color: #FCFBF8;
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23C5A059' fill-opacity='0.08'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
   }
 }
 
@@ -38,29 +56,23 @@
 }
 
 @theme {
-  /* --- TYPOGRAPHY --- */
+  /* --- FONTS --- */
   --font-heading: "Crimson Pro", serif; 
   --font-body: "Inter", sans-serif;
 
-  /* --- VIBHUT BRANDING --- */
-  
-  /* Primary: Deep Forest Green (Used for Buttons, Logo, Highlights) */
+  /* --- BRAND COLORS --- */
   --color-primary: #2E4F3E; 
   --color-primary-dark: #1F362A;
-  
-  /* Accents: Antique Gold */
   --color-gold: #C5A059;       
   --color-gold-light: #E5C580; 
 
-  /* --- STANDARD NEUTRALS (Restored) --- */
-  --color-bg-body: #FFFFFF;     /* Pure White */
-  --color-bg-subtle: #F9FAFB;   /* Gray 50 */
+  --color-bg-body: #FFFFFF;    
+  --color-bg-subtle: #F9FAFB;   
   
-  /* Text */
-  --color-text-main: #111827;   /* Gray 900 (Black) */
-  --color-text-muted: #4B5563;  /* Gray 600 */
+  --color-text-main: #111827;   
+  --color-text-muted: #4B5563;  
 
-  /* --- ELEVATION --- */
+  /* --- SHADOWS --- */
   --shadow-card: 0 2px 8px -2px rgba(0, 0, 0, 0.05);
   --shadow-card-hover: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
 }
@@ -74,11 +86,9 @@
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
-    color: var(--color-text-main); /* Headings stay Black */
+    color: var(--color-text-main);
     letter-spacing: -0.01em; 
   }
-  
-  /* Selection: Green background, White text */
   ::selection {
     background-color: var(--color-primary);
     color: #ffffff;

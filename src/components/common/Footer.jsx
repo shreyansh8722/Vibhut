@@ -1,100 +1,79 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import BrandLogo from './BrandLogo'; 
-import { CheckCircle2, ShieldCheck, Mail, Phone, MapPin, Truck } from 'lucide-react';
+import { Facebook, Instagram, Twitter, Mail, MapPin, Phone } from 'lucide-react';
+import BrandLogo from './BrandLogo';
 
-export const Footer = () => {
+const Footer = () => {
   return (
-    // Updated: Dark Forest Green Background
-    <footer className="bg-[#1F362A] text-white pt-16 border-t border-[var(--color-primary)] font-body">
-      
-      {/* 1. TRUST ICONS */}
-      <div className="container mx-auto px-6 pb-12 border-b border-[var(--color-primary)]/30">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-          {[
-            { icon: CheckCircle2, title: "Lab Certified", desc: "100% Authentic" },
-            { icon: ShieldCheck, title: "Secure Payment", desc: "SSL Encrypted" },
-            { icon: Truck, title: "Express Shipping", desc: "All India Delivery" },
-            { icon: Phone, title: "24/7 Support", desc: "Expert Assistance" }
-          ].map((item, idx) => (
-            <div key={idx} className="flex flex-col items-center text-center gap-3 group">
-              {/* Icon is now Gold */}
-              <item.icon className="w-8 h-8 text-[var(--color-gold)] group-hover:text-white transition-colors" strokeWidth={1.5} />
-              <div>
-                <h4 className="font-heading text-lg font-bold text-white group-hover:text-[var(--color-gold)] transition-colors">{item.title}</h4>
-                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{item.desc}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* 2. MAIN LINKS */}
-      <div className="container mx-auto px-6 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
-          
+    <footer className="bg-[#14241C] text-white pt-20 pb-10 border-t border-[#B08D55]/20 font-sans">
+      <div className="container mx-auto px-4">
+        
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
           {/* Brand Column */}
           <div className="space-y-6">
-            <Link to="/" aria-label="Vishwanatham Home">
-              <BrandLogo className="text-white h-8 w-auto" /> 
-            </Link>
-            <p className="text-sm leading-relaxed text-gray-400 max-w-xs font-medium">
-              Ancient wisdom for the modern soul. Delivering energized spiritual tools from Kashi to the world.
+            <BrandLogo className="h-10 text-white" />
+            <p className="text-gray-400 text-sm leading-relaxed">
+              Authentic spiritual marketplace from the ghats of Kashi. Bridging ancient Vedic wisdom with modern needs.
             </p>
+            <div className="flex gap-4">
+               {[Facebook, Instagram, Twitter].map((Icon, i) => (
+                  <a key={i} href="#" className="w-10 h-10 rounded-full bg-[#1F362A] flex items-center justify-center text-[#B08D55] hover:bg-[#B08D55] hover:text-white transition-colors">
+                     <Icon size={18} />
+                  </a>
+               ))}
+            </div>
           </div>
-          
-          {/* Shop */}
+
+          {/* Quick Links */}
           <div>
-            <h4 className="font-heading text-lg font-bold mb-6 text-[var(--color-gold)]">Shop</h4>
-            <ul className="space-y-3 text-sm text-gray-400 font-medium">
-              <li><Link to="/shop?category=Rudraksha" className="hover:text-[var(--color-gold)] transition-colors">Rudraksha</Link></li>
-              <li><Link to="/shop?category=Gemstones" className="hover:text-[var(--color-gold)] transition-colors">Gemstones</Link></li>
-              <li><Link to="/shop?category=Yantras" className="hover:text-[var(--color-gold)] transition-colors">Yantras</Link></li>
-              <li><Link to="/shop?category=Mala" className="hover:text-[var(--color-gold)] transition-colors">Japa Malas</Link></li>
+            <h4 className="font-serif font-bold text-lg mb-6 text-[#F4EBD9]">Shop</h4>
+            <ul className="space-y-3 text-sm text-gray-400">
+              <li><Link to="/shop?category=Rudraksha" className="hover:text-[#B08D55] transition-colors">Rudraksha Beads</Link></li>
+              <li><Link to="/shop?category=Gemstones" className="hover:text-[#B08D55] transition-colors">Certified Gemstones</Link></li>
+              <li><Link to="/shop?category=Yantras" className="hover:text-[#B08D55] transition-colors">Yantras & Idols</Link></li>
+              <li><Link to="/shop?sort=new" className="hover:text-[#B08D55] transition-colors">New Arrivals</Link></li>
             </ul>
           </div>
 
-          {/* Company */}
+          {/* Services */}
           <div>
-            <h4 className="font-heading text-lg font-bold mb-6 text-[var(--color-gold)]">Company</h4>
-            <ul className="space-y-3 text-sm text-gray-400 font-medium">
-              <li><Link to="/about" className="hover:text-[var(--color-gold)] transition-colors">Our Story</Link></li>
-              <li><Link to="/contact" className="hover:text-[var(--color-gold)] transition-colors">Contact Us</Link></li>
-              <li><Link to="/shipping" className="hover:text-[var(--color-gold)] transition-colors">Shipping Policy</Link></li>
-              <li><Link to="/returns" className="hover:text-[var(--color-gold)] transition-colors">Returns & Refunds</Link></li>
+            <h4 className="font-serif font-bold text-lg mb-6 text-[#F4EBD9]">Services</h4>
+            <ul className="space-y-3 text-sm text-gray-400">
+              <li><Link to="/kundali" className="hover:text-[#B08D55] transition-colors font-bold text-[#B08D55]">Get Kundali Report (₹99)</Link></li>
+              <li><Link to="/consult" className="hover:text-[#B08D55] transition-colors">Talk to Astrologer</Link></li>
+              <li><Link to="/consult?type=Tarot" className="hover:text-[#B08D55] transition-colors">Tarot Reading</Link></li>
+              <li><Link to="/track-order" className="hover:text-[#B08D55] transition-colors">Track Your Order</Link></li>
             </ul>
           </div>
 
-          {/* Contact Info */}
+          {/* Contact */}
           <div>
-            <h4 className="font-heading text-lg font-bold mb-6 text-[var(--color-gold)]">Visit Us</h4>
-            <ul className="space-y-4 text-sm text-gray-400 font-medium">
+            <h4 className="font-serif font-bold text-lg mb-6 text-[#F4EBD9]">Contact Us</h4>
+            <ul className="space-y-4 text-sm text-gray-400">
               <li className="flex items-start gap-3">
-                 <MapPin size={18} className="text-[var(--color-gold)] shrink-0" />
-                 <span>Godowlia Chowk, Varanasi,<br/>Uttar Pradesh, 221001</span>
+                 <MapPin size={18} className="text-[#B08D55] mt-0.5" />
+                 <span>B-21/100, Kamachha, <br/>Varanasi, Uttar Pradesh, 221010</span>
               </li>
               <li className="flex items-center gap-3">
-                 <Phone size={18} className="text-[var(--color-gold)] shrink-0" />
+                 <Phone size={18} className="text-[#B08D55]" />
                  <span>+91 98765 43210</span>
               </li>
               <li className="flex items-center gap-3">
-                 <Mail size={18} className="text-[var(--color-gold)] shrink-0" />
+                 <Mail size={18} className="text-[#B08D55]" />
                  <span>support@vishwanatham.com</span>
               </li>
             </ul>
           </div>
         </div>
-        
+
         {/* Bottom Bar */}
-        <div className="flex flex-col md:flex-row justify-between items-center border-t border-[var(--color-primary)]/30 pt-8 mt-10 gap-4">
-          <p className="text-xs text-gray-500 font-bold">
-            © 2025 Vishwanatham. All rights reserved.
-          </p>
-          <div className="flex gap-6 text-xs text-gray-500 font-bold uppercase tracking-wider">
-             <Link to="/privacy" className="hover:text-[var(--color-gold)]">Privacy</Link>
-             <Link to="/terms" className="hover:text-[var(--color-gold)]">Terms</Link>
-             <Link to="/sitemap" className="hover:text-[var(--color-gold)]">Sitemap</Link>
-          </div>
+        <div className="border-t border-[#1F362A] pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+           <p className="text-xs text-gray-500">© 2026 Vishwanatham. All rights reserved.</p>
+           <div className="flex gap-6 text-xs text-gray-500 uppercase tracking-wider font-bold">
+              <Link to="/privacy" className="hover:text-white">Privacy</Link>
+              <Link to="/terms" className="hover:text-white">Terms</Link>
+              <Link to="/shipping" className="hover:text-white">Shipping</Link>
+           </div>
         </div>
       </div>
     </footer>

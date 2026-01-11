@@ -6,10 +6,7 @@ import Navbar from './components/common/Navbar';
 import Footer from './components/common/Footer';
 import CartModal from './components/shop/CartModal';
 import { AppSkeleton } from './components/skeletons/AppSkeleton';
-// 1. IMPORT WHATSAPP BUTTON
 import WhatsAppButton from './components/common/WhatsAppButton'; 
-
-// OPTIMIZATION: Import Home Page directly
 import Home from './pages/HomePage'; 
 
 // --- LAZY COMPONENTS ---
@@ -21,6 +18,9 @@ const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const OrderSuccessPage = lazy(() => import('./pages/OrderSuccessPage'));
 const AdminPage = lazy(() => import('./pages/AdminPage'));
+
+// IMPORT THE NEW PAGE
+const KundaliPage = lazy(() => import('./pages/KundaliPage'));
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -49,6 +49,10 @@ function App() {
             <Route path="/checkout" element={<CheckoutPage />} />
             <Route path="/order-success" element={<OrderSuccessPage />} />
             <Route path="/consult" element={<ConsultPage />} />
+            
+            {/* NEW ROUTE */}
+            <Route path="/kundali" element={<KundaliPage />} />
+            
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/admin/*" element={<AdminPage />} />
@@ -57,9 +61,7 @@ function App() {
         </Suspense>
       </main>
       
-      {/* 2. ADD WHATSAPP BUTTON GLOBALLY */}
       <WhatsAppButton />
-
       <Footer />
     </div>
   );
